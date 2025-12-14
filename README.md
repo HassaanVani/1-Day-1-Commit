@@ -17,7 +17,11 @@ Contribution heatmap – Familiar GitHub-style activity view
 
 Repo exclusions – Ignore repos you don’t want factored in
 
+
+
 Tech stack
+
+
 Frontend:	React 18, Vite, TypeScript
 
 Styling:	Plain CSS with a small custom design system
