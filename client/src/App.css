@@ -1499,24 +1499,266 @@
 }
 
 /* ----------------------------------------
-   Responsive
+   Mobile Components
+   ---------------------------------------- */
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-default);
+  padding: 0 16px;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 100;
+}
+
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-default);
+  z-index: 100;
+}
+
+.mobile-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.mobile-nav-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mobile-nav-item.active {
+  color: var(--color-accent-emphasis);
+}
+
+.user-avatar-small {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+/* Loading Skeleton */
+.loading-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.skeleton-card {
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  height: 120px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-card.large {
+  height: 280px;
+}
+
+.header-badge.skeleton {
+  background: var(--bg-tertiary);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Badge Styles */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-muted {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+/* ----------------------------------------
+   Responsive - Mobile
    ---------------------------------------- */
 @media (max-width: 768px) {
+
+  /* Hide desktop sidebar */
   .sidebar {
     display: none;
   }
 
+  /* Show mobile header and nav */
+  .mobile-header {
+    display: flex;
+  }
+
+  .mobile-nav {
+    display: flex;
+  }
+
+  /* Adjust main content for mobile header/nav */
+  .app-layout {
+    display: block;
+  }
+
+  .main-content {
+    padding-top: 72px;
+    /* 56px header + 16px spacing */
+    padding-bottom: 72px;
+    /* 56px nav + 16px spacing */
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* Page header adjustments */
   .page-header {
     flex-direction: column;
     gap: var(--space-3);
     align-items: flex-start;
+    padding: var(--space-3) 0;
   }
 
+  .page-title {
+    font-size: 20px;
+  }
+
+  .header-stats {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Dashboard grid single column */
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
 
+  /* Status section mobile */
+  .status-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  .status-item>div:last-child {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  /* Cards mobile */
+  .card {
+    border-radius: 8px;
+  }
+
+  .card-body {
+    padding: var(--space-3);
+  }
+
+  /* Contribution graph scroll */
+  .contribution-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+  }
+
+  /* Settings mobile */
+  .settings-container {
+    max-width: 100%;
+  }
+
+  .setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .setting-row>.toggle,
+  .setting-row>.badge {
+    align-self: flex-end;
+  }
+
+  /* Reminders mobile */
+  .reminder-item {
+    flex-wrap: wrap;
+  }
+
+  /* Form adjustments */
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .add-reminder {
+    flex-direction: column;
+  }
+
+  .add-reminder input,
+  .add-reminder button {
+    width: 100%;
+  }
+
+  /* Quick stats mobile */
+  .quick-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Repo list mobile */
+  .repo-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .repo-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 400px) {
+  .quick-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .header-stats {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-badge {
+    width: 100%;
+    justify-content: center;
   }
 }

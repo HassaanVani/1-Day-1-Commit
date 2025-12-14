@@ -292,9 +292,11 @@ function Dashboard() {
   const { user, logout } = useAuth()
   const [activeTab, setActiveTab] = useState<'home' | 'repos' | 'settings'>('home')
 
-  const { data: todayData, refetch: refetchToday } = useApi<TodayStatus>('/api/github/today', user?.id)
-  const { data: suggestionData } = useApi<{ suggestion: Repo }>('/api/github/suggestion', user?.id)
-  const { data: contributionsData } = useApi<{ contributions: Contribution[] }>('/api/github/contributions', user?.id)
+  const { data: todayData, loading: loadingToday, refetch: refetchToday } = useApi<TodayStatus>('/api/github/today', user?.id)
+  const { data: suggestionData, loading: loadingSuggestion } = useApi<{ suggestion: Repo }>('/api/github/suggestion', user?.id)
+  const { data: contributionsData, loading: loadingContributions } = useApi<{ contributions: Contribution[] }>('/api/github/contributions', user?.id)
+
+  const isLoading = loadingToday || loadingSuggestion || loadingContributions
 
   if (!user) return null
 
@@ -350,6 +352,17 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* Mobile Header */}
+      <div className="mobile-header">
+        <div className="sidebar-brand">
+          {Icons.flame}
+          <span><span className="text-success">1</span>D<span className="text-success">1</span>C</span>
+        </div>
+        <button className="nav-item user-item" onClick={openGitHubProfile}>
+          <img src={user.avatar} alt="" className="user-avatar-small" />
+        </button>
+      </div>
+
       {/* Main Content */}
       <div className="main-content">
         <header className="page-header">
@@ -359,31 +372,60 @@ function Dashboard() {
             {activeTab === 'settings' && 'Settings'}
           </h1>
           <div className="header-stats">
-            <div className={`header-badge ${todayData?.hasCommitted ? 'success' : 'pending'}`}>
-              {todayData?.hasCommitted ? Icons.check : Icons.clock}
-              <span>{todayData?.hasCommitted ? 'Committed today' : 'Pending'}</span>
-            </div>
-            <div className="header-badge streak">
-              {Icons.flame}
-              <span>{todayData?.currentStreak || 0} day streak</span>
-            </div>
+            {isLoading ? (
+              <div className="header-badge skeleton">Loading...</div>
+            ) : (
+              <>
+                <div className={`header-badge ${todayData?.hasCommitted ? 'success' : 'pending'}`}>
+                  {todayData?.hasCommitted ? Icons.check : Icons.clock}
+                  <span>{todayData?.hasCommitted ? 'Committed today' : 'Pending'}</span>
+                </div>
+                <div className="header-badge streak">
+                  {Icons.flame}
+                  <span>{todayData?.currentStreak || 0} day streak</span>
+                </div>
+              </>
+            )}
           </div>
         </header>
 
         <div className="page-content">
           {activeTab === 'home' && (
-            <HomeTab
-              today={todayData}
-              suggestion={suggestionData?.suggestion}
-              contributions={contributionsData?.contributions || []}
-              onRefresh={refetchToday}
-              userId={user.id}
-            />
+            isLoading ? (
+              <div className="loading-skeleton">
+                <div className="skeleton-card"></div>
+                <div className="skeleton-card large"></div>
+              </div>
+            ) : (
+              <HomeTab
+                today={todayData}
+                suggestion={suggestionData?.suggestion}
+                contributions={contributionsData?.contributions || []}
+                onRefresh={refetchToday}
+                userId={user.id}
+              />
+            )
           )}
           {activeTab === 'repos' && <ReposTab userId={user.id} />}
           {activeTab === 'settings' && <SettingsTab userId={user.id} />}
         </div>
       </div>
+
+      {/* Mobile Navigation */}
+      <nav className="mobile-nav">
+        <button className={`mobile-nav-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
+          {Icons.home}
+          <span>Home</span>
+        </button>
+        <button className={`mobile-nav-item ${activeTab === 'repos' ? 'active' : ''}`} onClick={() => setActiveTab('repos')}>
+          {Icons.repo}
+          <span>Repos</span>
+        </button>
+        <button className={`mobile-nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+          {Icons.gear}
+          <span>Settings</span>
+        </button>
+      </nav>
     </div>
   )
 }
@@ -896,7 +938,6 @@ function ReposTab({ userId }: { userId: string }) {
 function SettingsTab({ userId }: { userId: string }) {
   const { data, refetch } = useApi<{ preferences: any; reminders: Reminder[] }>('/api/user/preferences', userId)
   const [newReminderTime, setNewReminderTime] = useState('')
-  const [pushSupported] = useState('Notification' in window)
 
   const updatePreference = async (key: string, value: any) => {
     await fetch(`${API_URL}/api/user/preferences`, {
@@ -938,82 +979,6 @@ function SettingsTab({ userId }: { userId: string }) {
   }
 
 
-  const requestPushPermission = async () => {
-    if (!pushSupported) return
-
-    try {
-      // Request permission
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') {
-        alert('Permission denied (User selected Block). Please reset in browser settings.')
-        return
-      }
-
-      // Get VAPID public key from server
-      const vapidRes = await fetch(`${API_URL}/api/push/vapid-public-key`)
-      if (!vapidRes.ok) throw new Error('Failed to fetch VAPID key')
-
-      const { publicKey, enabled } = await vapidRes.json()
-
-      if (!enabled || !publicKey) {
-        alert('Push notifications are not configured on the server. Please check env variables.')
-        return
-      }
-
-      // Register service worker
-      // Add error handling for registration
-      let registration;
-      try {
-        registration = await navigator.serviceWorker.register('/sw.js')
-        await navigator.serviceWorker.ready
-      } catch (swError: any) {
-        throw new Error('Service Worker Registration Failed: ' + swError.message);
-      }
-
-      // Subscribe to push
-      let subscription;
-      try {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey)
-        })
-      } catch (subError: any) {
-        throw new Error('Push Subscription Failed: ' + subError.message);
-      }
-
-      // Send subscription to server
-      const subJson = subscription.toJSON()
-      const saveRes = await fetch(`${API_URL}/api/user/push-subscription`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
-        body: JSON.stringify({
-          endpoint: subJson.endpoint,
-          keys: subJson.keys
-        })
-      })
-
-      if (!saveRes.ok) throw new Error('Failed to save subscription to server');
-
-      updatePreference('push_enabled', 1)
-      alert('Push notifications enabled successfully!')
-    } catch (error: any) {
-      console.error('Failed to enable push notifications:', error)
-      alert(`Failed to enable push notifications: ${error.message || String(error)}`)
-    }
-  }
-
-  // Helper to convert base64 to Uint8Array for VAPID key
-  function urlBase64ToUint8Array(base64String: string) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4)
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-    const rawData = window.atob(base64)
-    const outputArray = new Uint8Array(rawData.length)
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i)
-    }
-    return outputArray
-  }
-
   const prefs = data?.preferences || {}
   const reminders = data?.reminders || []
 
@@ -1046,33 +1011,9 @@ function SettingsTab({ userId }: { userId: string }) {
           <div className="setting-row">
             <div className="setting-info">
               <span className="setting-label">Push Notifications</span>
-              <span className="setting-desc">
-                {pushSupported
-                  ? 'Receive browser push notifications'
-                  : 'Push notifications not supported on this browser'}
-              </span>
-              {pushSupported && !prefs.push_enabled && (
-                <button
-                  className="btn-text"
-                  onClick={requestPushPermission}
-                  style={{ marginTop: '8px', fontSize: '12px' }}
-                >
-                  Enable Push Notifications
-                </button>
-              )}
+              <span className="setting-desc">Browser push notifications for commit reminders</span>
             </div>
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={prefs.push_enabled ?? false}
-                disabled={!pushSupported}
-                onChange={e => {
-                  if (e.target.checked) requestPushPermission()
-                  else updatePreference('push_enabled', 0)
-                }}
-              />
-              <span className="toggle-slider"></span>
-            </label>
+            <span className="badge badge-muted">Coming Soon</span>
           </div>
 
           <div className="setting-row">
