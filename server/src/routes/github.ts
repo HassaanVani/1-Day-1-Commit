@@ -56,12 +56,15 @@ router.get('/today', async (req: Request, res: Response) => {
         }
 
         const githubService = new GitHubService(user.github_token);
+
+        // Get today's status
         const todayStatus = await githubService.hasCommittedToday(user.github_username);
 
-        // Update local log
-        const today = new Date().toISOString().split('T')[0];
+        // Get streak directly from GitHub contributions (more accurate)
+        const streakData = await githubService.getCurrentStreak(user.github_username);
 
-        // Check if entry exists
+        // Update local log for historical tracking
+        const today = new Date().toISOString().split('T')[0];
         const existingLog = dbHelpers.prepare(
             'SELECT * FROM commit_log WHERE user_id = ? AND date = ?'
         ).get(userId, today);
@@ -76,41 +79,26 @@ router.get('/today', async (req: Request, res: Response) => {
             ).run(userId, today, todayStatus.hasCommitted ? 1 : 0, todayStatus.commitCount);
         }
 
-        // Update streaks if committed
-        if (todayStatus.hasCommitted) {
-            const streak = dbHelpers.prepare('SELECT * FROM streaks WHERE user_id = ?').get(userId) as any;
-
-            if (streak) {
-                const lastCommitDate = streak.last_commit_date;
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-                let newStreak = 1;
-                if (lastCommitDate === yesterdayStr) {
-                    newStreak = streak.current_streak + 1;
-                } else if (lastCommitDate === today) {
-                    newStreak = streak.current_streak;
-                }
-
-                const longestStreak = Math.max(newStreak, streak.longest_streak);
-
-                dbHelpers.prepare(
-                    'UPDATE streaks SET current_streak = ?, longest_streak = ?, last_commit_date = ? WHERE user_id = ?'
-                ).run(newStreak, longestStreak, today, userId);
-            }
+        // Update streak cache in database
+        const existingStreak = dbHelpers.prepare('SELECT * FROM streaks WHERE user_id = ?').get(userId);
+        if (existingStreak) {
+            dbHelpers.prepare(
+                'UPDATE streaks SET current_streak = ?, longest_streak = ?, last_commit_date = ? WHERE user_id = ?'
+            ).run(streakData.currentStreak, Math.max(streakData.longestStreak, (existingStreak as any).longest_streak || 0), todayStatus.hasCommitted ? today : (existingStreak as any).last_commit_date, userId);
+        } else {
+            dbHelpers.prepare(
+                'INSERT INTO streaks (user_id, current_streak, longest_streak, last_commit_date) VALUES (?, ?, ?, ?)'
+            ).run(userId, streakData.currentStreak, streakData.longestStreak, todayStatus.hasCommitted ? today : null);
         }
 
         saveDatabase();
 
-        // Get current streak
-        const streak = dbHelpers.prepare('SELECT current_streak, longest_streak FROM streaks WHERE user_id = ?').get(userId) as any;
-
         res.json({
             hasCommitted: todayStatus.hasCommitted,
             commitCount: todayStatus.commitCount,
-            currentStreak: streak?.current_streak || 0,
-            longestStreak: streak?.longest_streak || 0
+            currentStreak: streakData.currentStreak,
+            longestStreak: streakData.longestStreak,
+            username: user.github_username
         });
     } catch (error) {
         console.error('Error checking today status:', error);
@@ -141,10 +129,22 @@ router.get('/suggestion', async (req: Request, res: Response) => {
             .all(userId)
             .map((r: any) => r.repo_full_name);
 
-        // Filter and score repos
-        const suggestions = await githubService.getSuggestion(repos, excludedRepos);
+        // Get repo notes for weighted suggestions
+        const notesRows = dbHelpers.prepare('SELECT repo_full_name, priority, difficulty FROM repo_notes WHERE user_id = ?')
+            .all(userId) as any[];
 
-        res.json({ suggestion: suggestions });
+        const repoNotes = new Map<string, { priority?: number; difficulty?: number }>();
+        for (const row of notesRows) {
+            repoNotes.set(row.repo_full_name, {
+                priority: row.priority,
+                difficulty: row.difficulty
+            });
+        }
+
+        // Get suggestion with weighted algorithm
+        const suggestion = await githubService.getSuggestion(repos, excludedRepos, repoNotes);
+
+        res.json({ suggestion });
     } catch (error) {
         console.error('Error getting suggestion:', error);
         res.status(500).json({ error: 'Failed to get suggestion' });

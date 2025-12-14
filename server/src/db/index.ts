@@ -42,11 +42,8 @@ export async function initDatabase() {
     CREATE TABLE IF NOT EXISTS preferences (
       user_id TEXT PRIMARY KEY,
       email_enabled INTEGER DEFAULT 1,
-      push_enabled INTEGER DEFAULT 1,
+      push_enabled INTEGER DEFAULT 0,
       calendar_enabled INTEGER DEFAULT 0,
-      morning_time TEXT DEFAULT '09:00',
-      afternoon_time TEXT DEFAULT '15:00',
-      evening_time TEXT DEFAULT '20:00',
       weekends_off INTEGER DEFAULT 0
     );
 
@@ -69,6 +66,34 @@ export async function initDatabase() {
       current_streak INTEGER DEFAULT 0,
       longest_streak INTEGER DEFAULT 0,
       last_commit_date TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS reminder_times (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      time TEXT NOT NULL,
+      enabled INTEGER DEFAULT 1,
+      label TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS repo_notes (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      repo_full_name TEXT NOT NULL,
+      note TEXT,
+      difficulty INTEGER DEFAULT 3,
+      priority INTEGER DEFAULT 3,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      endpoint TEXT NOT NULL,
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
     );
   `);
 
