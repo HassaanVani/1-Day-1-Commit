@@ -154,21 +154,39 @@ async function checkUserAndNotify(userId: string, timeOfDay: string) {
 // Process reminders for current minute
 async function processReminders() {
     const now = new Date();
-    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    // Default server check (useful for logs)
+    const serverTimeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
-    console.log(`[CRON] Checking reminders for ${currentTime}`);
+    console.log(`[CRON] Checking reminders at UTC ${now.toISOString()} (Server Local: ${serverTimeStr})`);
 
-    // Find all reminders that match current time
+    // Fetch ALL enabled reminders attached to users (to get their timezone)
     const reminders = dbHelpers.prepare(`
-        SELECT r.user_id, r.time
+        SELECT r.user_id, r.time, u.timezone
         FROM reminder_times r
-        WHERE r.time = ? AND r.enabled = 1
-    `).all(currentTime) as Reminder[];
+        JOIN users u ON r.user_id = u.id
+        WHERE r.enabled = 1
+    `).all() as (Reminder & { timezone: string })[];
 
     for (const reminder of reminders) {
-        const hour = parseInt(reminder.time.split(':')[0]);
-        const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
-        await checkUserAndNotify(reminder.user_id, timeOfDay);
+        try {
+            // Convert current Server Instance time to User's Local Time
+            // We use 'en-GB' to force "HH:MM" format (24h) without AM/PM
+            const userLocalTime = now.toLocaleTimeString('en-GB', {
+                timeZone: reminder.timezone || 'UTC',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Check if user's local time matches the reminder time
+            if (userLocalTime === reminder.time) {
+                console.log(`[CRON] Triggering reminder for ${reminder.user_id} at ${userLocalTime} (${reminder.timezone})`);
+                const hour = parseInt(reminder.time.split(':')[0]);
+                const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+                await checkUserAndNotify(reminder.user_id, timeOfDay);
+            }
+        } catch (error) {
+            console.error(`[CRON] Error processing time for user ${reminder.user_id} (TZ: ${reminder.timezone}):`, error);
+        }
     }
 }
 

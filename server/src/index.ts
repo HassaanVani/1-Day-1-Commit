@@ -29,9 +29,19 @@ app.get('/api/health', (req, res) => {
 
 // VAPID public key for push notifications
 app.get('/api/push/vapid-public-key', (req, res) => {
+    const rawKey = process.env.VAPID_PUBLIC_KEY;
+    const cleanKey = rawKey ? rawKey.trim() : null;
+
+    // Log for debugging (first few chars)
+    if (cleanKey) {
+        console.log(`[VAPID] Sending public key starting with: ${cleanKey.substring(0, 5)}...`);
+    } else {
+        console.error('[VAPID] No public key found in env!');
+    }
+
     res.json({
-        publicKey: process.env.VAPID_PUBLIC_KEY || null,
-        enabled: !!process.env.VAPID_PUBLIC_KEY
+        publicKey: cleanKey,
+        enabled: !!cleanKey
     });
 });
 

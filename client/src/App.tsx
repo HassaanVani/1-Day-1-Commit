@@ -389,6 +389,23 @@ function Dashboard() {
 }
 
 // ============================================
+// Tooltip Component
+// ============================================
+function Tooltip({ text, children }: { text: string, children: ReactNode }) {
+  const [show, setShow] = useState(false)
+  return (
+    <div
+      className="tooltip-container"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      {show && <div className="custom-tooltip">{text}</div>}
+      {children}
+    </div>
+  )
+}
+
+// ============================================
 // Home Tab
 // ============================================
 function HomeTab({ today, suggestion, contributions, onRefresh, userId }: {
@@ -405,35 +422,27 @@ function HomeTab({ today, suggestion, contributions, onRefresh, userId }: {
   return (
     <div className="dashboard-grid">
       <div className="dashboard-main">
-        {/* Status Card */}
-        <div className="card">
-          <div className="card-header">
-            <h2 className="card-title">
-              {Icons.flame}
-              Today's Status
-            </h2>
-            <button className="btn-secondary btn-sm" onClick={onRefresh}>
-              {Icons.sync}
-              Refresh
-            </button>
-          </div>
-          <div className="card-body">
-            <div className={`status-banner ${hasCommitted ? 'success' : 'pending'}`}>
-              <div className={`status-icon ${hasCommitted ? 'success' : 'pending'}`}>
-                {hasCommitted ? Icons.check : Icons.clock}
-              </div>
-              <div className="status-text">
-                <h3>{hasCommitted ? `${today?.commitCount || 0} commits` : 'Awaiting commit'}</h3>
-                <p>{hasCommitted ? 'Streak secured for today' : 'Commit to maintain streak'}</p>
-              </div>
+        {/* Strict Status Item (GitHub Check Style) */}
+        <div className="status-section">
+          <div className={`status-item ${hasCommitted ? 'success' : 'pending'}`}>
+            <div className={`status-icon-container ${hasCommitted ? 'success' : 'pending'}`}>
+              {hasCommitted ? Icons.check : Icons.clock}
+            </div>
+            <div className="status-content">
+              <span className="status-heading">
+                {hasCommitted ? 'All daily goals met' : 'Daily goal pending'}
+              </span>
+              <span className="status-sub">
+                {hasCommitted
+                  ? `Streak active: ${streak} days`
+                  : 'Push a commit to maintain your streak'}
+              </span>
             </div>
 
-            <div className="streak-section">
-              <div className="streak-main">
-                <span className="streak-number">{streak}</span>
-                <span className="streak-unit">days</span>
-              </div>
-              <p className="streak-record">Best: {longestStreak}</p>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+              <button className="btn-icon" onClick={onRefresh} title="Refresh Data">
+                {Icons.sync}
+              </button>
             </div>
           </div>
         </div>
@@ -467,8 +476,8 @@ function HomeTab({ today, suggestion, contributions, onRefresh, userId }: {
                 <span className="stat-value">{longestStreak} days</span>
               </div>
               <div className="stat-row">
-                <span className="stat-label">This Week</span>
-                <span className="stat-value">{contributions.slice(-7).filter(c => c.count > 0).length} days</span>
+                <span className="stat-label">Total Commits (Year)</span>
+                <span className="stat-value">{contributions.reduce((acc, c) => acc + c.count, 0)}</span>
               </div>
               <div className="stat-row">
                 <span className="stat-label">Today's Commits</span>
@@ -637,58 +646,68 @@ function ContributionGraph({ contributions }: { contributions: Contribution[] })
     )
   }
 
-  // 1. Determine date range from ACTUAL data
-  // Sort just in case
-  const sorted = [...contributions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-  const firstDate = new Date(sorted[0].date)
-  const lastDate = new Date() // End at today
+  // Optimize date parsing
 
-  // 2. Align start date to the previous Sunday
-  const startDate = new Date(firstDate)
-  while (startDate.getDay() !== 0) {
-    startDate.setDate(startDate.getDate() - 1)
+  // Find start date (Sunday before the first data point)
+  // We want exactly 53 weeks usually
+  const lastDate = new Date();
+  const startDate = new Date(lastDate);
+  startDate.setDate(startDate.getDate() - (52 * 7)); // 52 weeks back roughly
+  while (startDate.getDay() !== 0) { // Align to Sunday
+    startDate.setDate(startDate.getDate() - 1);
   }
 
-  // 3. Generate the full grid (52/53 weeks)
+  // Generate Grid
   const grid: { date: string; count: number; month: number }[][] = []
   const currentDate = new Date(startDate)
   const monthLabels: { month: string; weekIndex: number }[] = []
   let lastMonth = -1
   let weekIndex = 0
 
-  // Generate until we pass today
-  while (currentDate <= lastDate || currentDate.getDay() !== 0) {
+  // 53 weeks to be safe and cover everything
+  while (weekIndex < 53) {
     const week: { date: string; count: number; month: number }[] = []
 
-    // Check for month label at start of week
-    const month = currentDate.getMonth()
-    if (month !== lastMonth) {
-      // Only add label if it's the first week of the month mostly
-      const d = new Date(currentDate);
-      d.setDate(d.getDate() + 7);
-      if (d.getMonth() === month) { // simplistic check
-        monthLabels.push({
-          month: currentDate.toLocaleDateString('en-US', { month: 'short' }),
-          weekIndex
-        })
-        lastMonth = month
+    // Month label logic: If the week contains the 1st of the month, OR if it's the first week of the graph
+    // GitHub places label over the week where the month *starts*.
+    // We check the first day of the week.
+    // Check if the month changes within this week (e.g. if any day is the 1st)
+    let hasMonthChange = false;
+    let labelMonth = -1;
+
+    // We can pre-calculate if this week has the 1st
+    const checkDate = new Date(currentDate);
+    for (let d = 0; d < 7; d++) {
+      if (checkDate.getDate() === 1) {
+        hasMonthChange = true;
+        labelMonth = checkDate.getMonth();
       }
+      checkDate.setDate(checkDate.getDate() + 1);
+    }
+
+    if (hasMonthChange && labelMonth !== -1 && labelMonth !== lastMonth) {
+      monthLabels.push({
+        month: new Date(currentDate.getFullYear(), labelMonth, 1).toLocaleDateString('en-US', { month: 'short' }),
+        weekIndex
+      });
+      lastMonth = labelMonth;
+    } else if (weekIndex === 0) {
+      // Always label the first month
+      monthLabels.push({
+        month: currentDate.toLocaleDateString('en-US', { month: 'short' }),
+        weekIndex
+      });
+      lastMonth = currentDate.getMonth();
     }
 
     for (let d = 0; d < 7; d++) {
       const dateStr = currentDate.toISOString().split('T')[0]
-      // Use efficient lookup or find
-      // (Since array is size 365, .find is fast enough, but map is better if strict)
       const count = contributions.find(c => c.date === dateStr)?.count || 0
-
       week.push({ date: dateStr, count, month: currentDate.getMonth() })
       currentDate.setDate(currentDate.getDate() + 1)
     }
     grid.push(week)
     weekIndex++
-
-    // Safety break
-    if (weekIndex > 54) break;
   }
 
   const getLevel = (count: number) => {
@@ -699,34 +718,34 @@ function ContributionGraph({ contributions }: { contributions: Contribution[] })
     return 'l4'
   }
 
-  const totalContributions = contributions.reduce((sum, c) => sum + c.count, 0)
-  const dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', '']
-
-  // Format date for title: "6 contributions on December 14th."
-  const formatTitle = (count: number, dateStr: string) => {
-    const date = new Date(dateStr + 'T12:00:00') // Avoid timezone shift
-    const options: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' }
+  const formatTooltip = (count: number, dateStr: string) => {
+    const date = new Date(dateStr + 'T12:00:00')
+    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' }
     const dateText = date.toLocaleDateString('en-US', options)
-    // Add ordinal suffix logic if needed, simplifed for now
+    if (count === 0) return `No contributions on ${dateText}`
     return `${count} contribution${count === 1 ? '' : 's'} on ${dateText}`
   }
 
   return (
     <div className="card contribution-card">
       <div className="card-header">
-        <h2 className="card-title">{totalContributions} contributions in the last year</h2>
+        <h2 className="card-title">
+          {contributions.reduce((acc, c) => acc + c.count, 0)} contributions in the last year
+        </h2>
       </div>
       <div className="card-body">
         <div className="contribution-wrapper">
-          {/* Day labels on left */}
           <div className="contribution-day-labels">
-            {dayLabels.map((label, i) => (
-              <span key={i} className="day-label">{label}</span>
-            ))}
+            <span></span>
+            <span className="day-label">Mon</span>
+            <span></span>
+            <span className="day-label">Wed</span>
+            <span></span>
+            <span className="day-label">Fri</span>
+            <span></span>
           </div>
 
           <div className="contribution-main">
-            {/* Month labels on top */}
             <div className="contribution-month-labels">
               {monthLabels.map((m, i) => (
                 <span
@@ -739,16 +758,13 @@ function ContributionGraph({ contributions }: { contributions: Contribution[] })
               ))}
             </div>
 
-            {/* Contribution grid */}
             <div className="contribution-grid">
               {grid.map((week, wi) => (
                 <div key={wi} className="contribution-week">
                   {week.map((day, di) => (
-                    <div
-                      key={di}
-                      className={`contribution-day ${getLevel(day.count)}`}
-                      title={formatTitle(day.count, day.date)}
-                    />
+                    <Tooltip key={di} text={formatTooltip(day.count, day.date)}>
+                      <div className={`contribution-day ${getLevel(day.count)}`} />
+                    </Tooltip>
                   ))}
                 </div>
               ))}
@@ -757,7 +773,6 @@ function ContributionGraph({ contributions }: { contributions: Contribution[] })
         </div>
 
         <div className="contribution-footer">
-          <a href="#" className="contribution-link">Learn how we count contributions</a>
           <div className="contribution-legend">
             <span>Less</span>
             <div className="legend-colors">
