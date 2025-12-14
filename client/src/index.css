@@ -1,67 +1,77 @@
 :root {
-  /* VS Code Dark Plus Palette */
-  --bg-primary: #1e1e1e;
-  --bg-secondary: #252526;
-  --bg-tertiary: #2d2d2d;
-  --bg-sidebar: #252526;
-  --bg-activity-bar: #333333;
-  --bg-input: #3c3c3c;
-  --bg-selection: #264f78;
-  --bg-hover: #2a2d2e;
+  /* VS Code Dark Plus Palette - Enhanced */
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --bg-sidebar: #0d1117;
+  --bg-activity-bar: #010409;
+  --bg-input: #0d1117;
+  --bg-selection: #1f6feb33;
+  --bg-hover: #1f6feb1a;
 
-  /* Borders */
-  --border-subtle: #454545;
-  --border-focus: #007fd4;
+  /* Borders - GitHub Style */
+  --border-default: #30363d;
+  --border-muted: #21262d;
+  --border-focus: #1f6feb;
+  --border-success: #238636;
 
-  /* Text */
-  --text-primary: #cccccc;
-  --text-secondary: #858585;
+  /* Text - GitHub Primer */
+  --text-primary: #e6edf3;
+  --text-secondary: #7d8590;
+  --text-tertiary: #484f58;
+  --text-link: #58a6ff;
   --text-white: #ffffff;
-  --text-link: #3794ff;
 
-  /* Syntax Highlighting Accents */
-  --accent-blue: #569cd6;
-  /* Keywords */
-  --accent-green: #6a9955;
-  /* Comments/Strings */
-  --accent-orange: #ce9178;
-  /* Strings */
-  --accent-yellow: #dcdcaa;
-  /* Functions */
-  --accent-purple: #c586c0;
-  /* Control Flow */
-  --accent-cyan: #4ec9b0;
-  /* Types */
+  /* Syntax Highlighting (GitHub Dark) */
+  --syntax-keyword: #ff7b72;
+  --syntax-string: #a5d6ff;
+  --syntax-function: #d2a8ff;
+  --syntax-variable: #ffa657;
+  --syntax-comment: #8b949e;
+  --syntax-type: #7ee787;
+  --syntax-constant: #79c0ff;
 
   /* Status Colors */
-  --status-added: #81b88b;
-  --status-modified: #e2c08d;
-  --status-deleted: #c74e39;
-  --status-error: #f48771;
-  --status-warning: #cca700;
+  --color-success: #3fb950;
+  --color-success-subtle: #238636;
+  --color-warning: #d29922;
+  --color-danger: #f85149;
+  --color-accent: #1f6feb;
+  --color-accent-emphasis: #388bfd;
 
-  /* Terminal Colors */
-  --terminal-bg: #1e1e1e;
-  --terminal-green: #0d0;
-  --terminal-cursor: #aeafad;
+  /* GitHub Green Contribution */
+  --contrib-l0: #161b22;
+  --contrib-l1: #0e4429;
+  --contrib-l2: #006d32;
+  --contrib-l3: #26a641;
+  --contrib-l4: #39d353;
 
-  /* Spacing - Dense/Functional */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 12px;
-  --space-lg: 16px;
-  --space-xl: 24px;
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 48px;
 
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 
-  /* Shapes */
-  --radius-none: 0px;
-  --radius-sm: 2px;
+  /* Sizing */
+  --header-height: 62px;
+  --sidebar-width: 48px;
+  --panel-width: 260px;
 
-  /* Transitions */
-  --transition-fast: 100ms ease-out;
+  /* Effects */
+  --shadow-sm: 0 1px 0 rgba(27, 31, 36, 0.04);
+  --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-xl: 0 12px 28px rgba(0, 0, 0, 0.4);
+
+  --glow-green: 0 0 20px rgba(63, 185, 80, 0.3);
+  --glow-blue: 0 0 20px rgba(56, 139, 253, 0.3);
+  --glow-purple: 0 0 20px rgba(163, 113, 247, 0.3);
 }
 
 /* Reset */
@@ -75,7 +85,6 @@
 
 html {
   font-size: 14px;
-  /* Slightly smaller base for density */
   background: var(--bg-primary);
   color: var(--text-primary);
   height: 100%;
@@ -86,23 +95,57 @@ body {
   line-height: 1.5;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Typography Utilities */
-.code {
+#root {
+  min-height: 100vh;
+}
+
+/* Scrollbars - GitHub Style */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border: 3px solid transparent;
+  border-radius: 7px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Links */
+a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Utility Classes */
+.mono {
   font-family: var(--font-mono);
-}
-
-.text-xs {
-  font-size: 11px;
 }
 
 .text-sm {
   font-size: 12px;
 }
 
-.text-base {
-  font-size: 13px;
+.text-xs {
+  font-size: 11px;
 }
 
 .text-lg {
@@ -113,57 +156,138 @@ body {
   font-size: 20px;
 }
 
-.font-medium {
-  font-weight: 500;
+.text-2xl {
+  font-size: 24px;
 }
 
-.font-bold {
-  font-weight: 600;
+.text-3xl {
+  font-size: 32px;
 }
 
 .text-secondary {
   color: var(--text-secondary);
 }
 
-.text-accent {
-  color: var(--accent-blue);
-}
-
 .text-success {
-  color: var(--status-added);
+  color: var(--color-success);
 }
 
 .text-warning {
-  color: var(--status-warning);
+  color: var(--color-warning);
 }
 
-.text-error {
-  color: var(--status-error);
+.text-danger {
+  color: var(--color-danger);
 }
 
-/* Scrollbars - VS Code Style */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+.text-accent {
+  color: var(--color-accent-emphasis);
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+.font-medium {
+  font-weight: 500;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #424242;
-  border-radius: 0;
+.font-semibold {
+  font-weight: 600;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #4f4f4f;
+.font-bold {
+  font-weight: 700;
 }
 
-::-webkit-scrollbar-thumb:active {
-  background: #5f5f5f;
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-::-webkit-scrollbar-corner {
-  background: transparent;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Focus Styles */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
 }
