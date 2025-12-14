@@ -94,12 +94,10 @@ function AuthProvider({ children }: { children: ReactNode }) {
   )
 }
 
-// Custom hook for auth
 function useAuth() {
   return useContext(AuthContext)
 }
 
-// Custom hook for API calls
 function useApi<T>(endpoint: string, userId?: string) {
   const [data, setData] = useState<T | null>(null)
   const [loading, setLoading] = useState(true)
@@ -135,68 +133,171 @@ function useApi<T>(endpoint: string, userId?: string) {
   }
 }
 
-// Landing Page
-function LandingPage() {
-  const { login } = useAuth()
+// ------------------------------------------------------------------
+// Components (Terminal Style)
+// ------------------------------------------------------------------
 
+function ActivityBar({ activeTab, onTabChange, logout }: any) {
   return (
-    <div className="landing">
-      <div className="landing-bg">
-        <div className="landing-glow" />
+    <div className="sidebar">
+      <div
+        className={`activity-item ${activeTab === 'home' ? 'active' : ''}`}
+        onClick={() => onTabChange('home')}
+        title="Dashboard (Ctrl+Shift+D)"
+      >
+        <svg className="activity-icon" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0z" /><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3.5a.5.5 0 0 1-.5-.5v-3.5A.5.5 0 0 1 8 4z" /></svg>
+      </div>
+      <div
+        className={`activity-item ${activeTab === 'repos' ? 'active' : ''}`}
+        onClick={() => onTabChange('repos')}
+        title="Source Control (Ctrl+Shift+G)"
+      >
+        <svg className="activity-icon" viewBox="0 0 16 16"><path fillRule="evenodd" d="M10.5 3.5a2.5 2.5 0 0 0-5 0V4h5v-.5zm1 0V4H15v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4h3.5v-.5a3.5 3.5 0 1 1 7 0zM14 5H2v9h12V5z" /></svg>
+      </div>
+      <div
+        className={`activity-item ${activeTab === 'settings' ? 'active' : ''}`}
+        onClick={() => onTabChange('settings')}
+        title="Settings (Ctrl+,)"
+      >
+        <svg className="activity-icon" viewBox="0 0 16 16"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.86z" /></svg>
       </div>
 
-      <main className="landing-content">
-        <div className="landing-badge animate-fade-in">
-          <span className="badge-dot" />
-          Build habits that compound
-        </div>
+      <div style={{ flex: 1 }} />
 
-        <h1 className="landing-title animate-slide-up">
-          <span className="title-accent">1</span> Day
-          <span className="title-accent">1</span> Commit
-        </h1>
-
-        <p className="landing-subtitle animate-slide-up" style={{ animationDelay: '100ms' }}>
-          Transform your coding journey with one simple commitment.
-          <br />
-          Ship something small every day. Watch your skills compound.
-        </p>
-
-        <button
-          className="btn-primary btn-lg animate-slide-up"
-          onClick={login}
-          style={{ animationDelay: '200ms' }}
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-          </svg>
-          Continue with GitHub
-        </button>
-
-        <div className="landing-features animate-fade-in" style={{ animationDelay: '400ms' }}>
-          <div className="feature">
-            <div className="feature-icon">📊</div>
-            <span>Track Your Streak</span>
-          </div>
-          <div className="feature">
-            <div className="feature-icon">🔔</div>
-            <span>Smart Reminders</span>
-          </div>
-          <div className="feature">
-            <div className="feature-icon">💡</div>
-            <span>Repo Suggestions</span>
-          </div>
-        </div>
-      </main>
-
-      <footer className="landing-footer">
-        <p className="text-tertiary">No credit card required • Free forever</p>
-      </footer>
+      <div className="activity-item" onClick={logout} title="Sign Out">
+        <svg className="activity-icon" viewBox="0 0 16 16"><path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z" /><path fillRule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" /></svg>
+      </div>
     </div>
   )
 }
 
-// Dashboard
+function Explorer({ activeTab, user }: any) {
+  return (
+    <div className="secondary-sidebar">
+      <div className="sidebar-header">Explorer</div>
+
+      <div className="explorer-section">
+        <div className="explorer-title">
+          <span style={{ marginRight: 4 }}>▼</span> 1_DAY_1_COMMIT
+        </div>
+
+        {activeTab === 'home' && (
+          <>
+            <div className="explorer-item active">
+              <span className="file-icon" style={{ background: 'var(--accent-blue)' }}></span>
+              dashboard.tsx
+            </div>
+            <div className="explorer-item">
+              <span className="file-icon" style={{ background: 'var(--accent-orange)' }}></span>
+              streak.json
+            </div>
+          </>
+        )}
+
+        {activeTab === 'repos' && (
+          <>
+            <div className="explorer-item active">
+              <span className="file-icon" style={{ background: 'var(--accent-yellow)' }}></span>
+              repos.config
+            </div>
+          </>
+        )}
+
+        {activeTab === 'settings' && (
+          <>
+            <div className="explorer-item active">
+              <span className="file-icon" style={{ background: 'var(--accent-green)' }}></span>
+              settings.json
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="explorer-section" style={{ marginTop: 'auto', borderTop: '1px solid var(--border-subtle)' }}>
+        <div className="explorer-title">
+          TIMELINE
+        </div>
+        <div style={{ padding: '8px 20px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+          User: {user.username}<br />
+          Env: Production
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TerminalHeader({ path }: { path: string }) {
+  const parts = path.split('/')
+  return (
+    <div className="editor-header">
+      <div className="breadcrumb">
+        1d1c
+        {parts.map((part, i) => (
+          <span key={i}>
+            <span className="breadcrumb-separator">›</span>
+            <span className={i === parts.length - 1 ? 'breadcrumb-current' : ''}>{part}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TerminalInput({ command }: { command: string }) {
+  return (
+    <div className="terminal-input-group">
+      <span className="prompt">user@1d1c:<span className="prompt-path">~</span>$</span>
+      <span className="command">{command}</span>
+      <span className="cursor" />
+    </div>
+  )
+}
+
+function LandingPage() {
+  const { login } = useAuth()
+
+  return (
+    <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
+      <div className="landing-terminal">
+        <div className="terminal-header">
+          <div className="terminal-dot red" />
+          <div className="terminal-dot yellow" />
+          <div className="terminal-dot green" />
+          <div style={{ marginLeft: 8, fontSize: 12, color: '#aaa' }}>bash — 80x24</div>
+        </div>
+        <div className="terminal-body">
+          <div style={{ marginBottom: 16 }}>
+            <span className="text-accent">1 Day 1 Commit</span> v1.0.0
+            <br />
+            Initializing habit protocols...
+          </div>
+
+          <div className="typewriter" style={{ color: 'var(--text-white)' }}>
+            $ ./build_habit.sh --consistent
+          </div>
+
+          <div style={{ marginTop: 24, opacity: 0, animation: 'fadeIn 0.5s forwards 1s' }}>
+            &gt; Tracking streak... <span className="text-success">[OK]</span>
+            <br />
+            &gt; Configuring notifications... <span className="text-success">[OK]</span>
+            <br />
+            &gt; Analyzing repos... <span className="text-success">[OK]</span>
+          </div>
+
+          <div style={{ marginTop: 40, opacity: 0, animation: 'fadeIn 0.5s forwards 1.5s' }}>
+            <span className="text-secondary"># Ready to start?</span>
+            <br />
+            <br />
+            <button className="btn btn-primary" onClick={login}>
+              Connect with GitHub
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Dashboard() {
   const { user, logout } = useAuth()
   const [activeTab, setActiveTab] = useState<'home' | 'repos' | 'settings'>('home')
@@ -208,241 +309,136 @@ function Dashboard() {
   if (!user) return null
 
   return (
-    <div className="dashboard">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="logo">
-            <span className="logo-icon">🔥</span>
-            <span className="logo-text">1D1C</span>
-          </div>
+    <div className="app-container">
+      <ActivityBar activeTab={activeTab} onTabChange={setActiveTab} logout={logout} />
+      <Explorer activeTab={activeTab} user={user} />
+
+      <div className="main-content">
+        <TerminalHeader path={`src/views/${activeTab === 'home' ? 'dashboard' : activeTab}.tsx`} />
+
+        <div className="editor-area">
+          {activeTab === 'home' && (
+            <HomeTab
+              today={todayData}
+              suggestion={suggestionData?.suggestion}
+              contributions={contributionsData?.contributions || []}
+              onRefresh={refetchToday}
+            />
+          )}
+          {activeTab === 'repos' && <ReposTab userId={user.id} />}
+          {activeTab === 'settings' && <SettingsTab userId={user.id} />}
         </div>
-
-        <nav className="sidebar-nav">
-          <button
-            className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
-            onClick={() => setActiveTab('home')}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            </svg>
-            Home
-          </button>
-          <button
-            className={`nav-item ${activeTab === 'repos' ? 'active' : ''}`}
-            onClick={() => setActiveTab('repos')}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-            </svg>
-            Repos
-          </button>
-          <button
-            className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
-            Settings
-          </button>
-        </nav>
-
-        <div className="sidebar-footer">
-          <div className="user-card">
-            <img src={user.avatar} alt={user.username} className="user-avatar" />
-            <div className="user-info">
-              <span className="user-name">{user.username}</span>
-              <button className="btn-ghost btn-sm" onClick={logout}>Sign out</button>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="main-content">
-        {activeTab === 'home' && (
-          <HomeTab
-            today={todayData}
-            suggestion={suggestionData?.suggestion}
-            contributions={contributionsData?.contributions || []}
-            onRefresh={refetchToday}
-          />
-        )}
-        {activeTab === 'repos' && <ReposTab userId={user.id} />}
-        {activeTab === 'settings' && <SettingsTab userId={user.id} />}
-      </main>
+      </div>
     </div>
   )
 }
 
-// Home Tab
-function HomeTab({
-  today,
-  suggestion,
-  contributions,
-  onRefresh
-}: {
-  today: TodayStatus | null
-  suggestion?: Repo
-  contributions: Contribution[]
-  onRefresh: () => void
-}) {
-  const currentStreak = today?.currentStreak ?? 0
-  const hasCommitted = today?.hasCommitted ?? false
+function HomeTab({ today, suggestion, contributions, onRefresh }: any) {
+  const hasCommitted = today?.hasCommitted || false
+  const streak = today?.currentStreak || 0
 
   return (
-    <div className="home-tab">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">Dashboard</h1>
-          <p className="page-subtitle">
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </p>
-        </div>
-        <button className="btn-secondary" onClick={onRefresh}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-            <path d="M23 4v6h-6M1 20v-6h6" />
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-          </svg>
-          Refresh
-        </button>
-      </header>
+    <div className="dashboard-grid">
+      <div className="main-panel">
+        <TerminalInput command="git status" />
 
-      <div className="stats-grid">
-        {/* Status Card */}
-        <div className={`stat-card stat-card-lg ${hasCommitted ? 'committed' : 'pending'}`}>
-          <div className="stat-card-glow" />
-          <div className="stat-icon-large">
-            {hasCommitted ? '✅' : '⏳'}
+        <div className="panel">
+          <div className="panel-header">
+            <span>Current Status</span>
+            <button className="btn btn-outline" style={{ padding: '2px 8px', fontSize: 10 }} onClick={onRefresh}>REFRESH</button>
           </div>
-          <div className="stat-content">
-            <h3 className="stat-label">Today's Status</h3>
-            <p className="stat-value-large">
-              {hasCommitted ? 'Committed!' : 'Waiting for commit'}
-            </p>
-            {today && today.commitCount > 0 && (
-              <p className="stat-detail">{today.commitCount} commit{today.commitCount > 1 ? 's' : ''} today</p>
-            )}
+          <div className="panel-content">
+            <div className="status-line">
+              <span className="status-timestamp">Today</span>
+              <span className={hasCommitted ? "text-success" : "text-warning"}>
+                {hasCommitted ? "Changes committed to repository." : "No changes committed yet."}
+              </span>
+            </div>
+
+            <div className="status-line">
+              <span className="status-timestamp">Streak</span>
+              <span className="text-secondary">
+                On branch <span className="text-accent">main</span> via <span className="text-accent">origin/daily</span>
+              </span>
+            </div>
+
+            <div style={{ fontFamily: 'monospace', margin: '20px 0', fontSize: '14px' }}>
+              streak: <span className="text-success">{streak} days</span>
+              <br />
+              record: {today?.longestStreak} days
+            </div>
           </div>
         </div>
 
-        {/* Streak Card */}
-        <div className="stat-card streak-card">
-          <div className="streak-display">
-            <span className="streak-flame animate-float">🔥</span>
-            <span className="streak-number">{currentStreak}</span>
+        {suggestion && !hasCommitted && (
+          <div className="panel">
+            <div className="panel-header">Suggested Task</div>
+            <div className="panel-content">
+              <span className="text-secondary"># TODO: Push to this repository</span>
+              <br />
+              <a href={suggestion.html_url} target="_blank" className="text-link text-xl font-mono" style={{ textDecoration: 'none', color: 'var(--text-link)', display: 'block', margin: '8px 0' }}>
+                {suggestion.full_name}
+              </a>
+              <div className="text-sm text-secondary">
+                Last push: <span className="text-warning">{suggestion.daysSinceLastPush} days ago</span>
+                {' • '}
+                Issues: <span className="text-accent">{suggestion.open_issues_count} open</span>
+              </div>
+            </div>
           </div>
-          <div className="stat-content">
-            <h3 className="stat-label">Current Streak</h3>
-            <p className="stat-detail">
-              Longest: {today?.longestStreak ?? 0} days
-            </p>
+        )}
+
+        <div className="panel">
+          <div className="panel-header">Contribution Log</div>
+          <div className="panel-content">
+            <ContributionHeatmap contributions={contributions} />
           </div>
         </div>
       </div>
 
-      {/* Suggestion Card */}
-      {suggestion && !hasCommitted && (
-        <div className="suggestion-card animate-slide-up">
-          <div className="suggestion-header">
-            <div className="suggestion-icon">💡</div>
-            <div>
-              <h3>Suggested Repository</h3>
-              <p className="text-tertiary">This repo needs some attention</p>
-            </div>
-          </div>
-          <div className="suggestion-content">
-            <a href={suggestion.html_url} target="_blank" rel="noopener noreferrer" className="repo-link">
-              <span className="repo-name">{suggestion.full_name}</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" y1="14" x2="21" y2="3" />
-              </svg>
-            </a>
-            <div className="repo-meta">
-              {suggestion.language && (
-                <span className="repo-language">
-                  <span className="language-dot" />
-                  {suggestion.language}
-                </span>
-              )}
-              <span className="repo-stat">
-                {suggestion.daysSinceLastPush} days since last push
-              </span>
-            </div>
-            {suggestion.description && (
-              <p className="repo-description">{suggestion.description}</p>
-            )}
+      <div className="side-panel">
+        <div className="panel">
+          <div className="panel-header">Properties</div>
+          <div className="panel-content">
+            <div className="text-xs text-secondary mb-2">WORKSPACE</div>
+            <div className="text-sm">Production</div>
+            <br />
+            <div className="text-xs text-secondary mb-2">GIT CONFIG</div>
+            <div className="text-sm">user.name: {today?.username || 'user'}</div>
+            <div className="text-sm">core.editor: vscode</div>
           </div>
         </div>
-      )}
-
-      {/* Contribution Heatmap */}
-      <div className="contributions-section">
-        <h3 className="section-title">Recent Activity</h3>
-        <ContributionHeatmap contributions={contributions} />
       </div>
     </div>
   )
 }
 
-// Contribution Heatmap
 function ContributionHeatmap({ contributions }: { contributions: Contribution[] }) {
-  const today = new Date()
-  const days = 84 // 12 weeks
-
-  const getContributionLevel = (count: number): number => {
-    if (count === 0) return 0
-    if (count <= 2) return 1
-    if (count <= 5) return 2
-    if (count <= 10) return 3
-    return 4
-  }
-
+  const days = 84
   const grid = Array.from({ length: days }, (_, i) => {
-    const date = new Date(today)
-    date.setDate(date.getDate() - (days - 1 - i))
-    const dateStr = date.toISOString().split('T')[0]
-    const contribution = contributions.find(c => c.date === dateStr)
-    return {
-      date: dateStr,
-      count: contribution?.count || 0,
-      level: getContributionLevel(contribution?.count || 0)
-    }
+    const d = new Date()
+    d.setDate(d.getDate() - (days - 1 - i))
+    return contributions.find(c => c.date === d.toISOString().split('T')[0])?.count || 0
   })
 
   return (
-    <div className="heatmap">
-      <div className="heatmap-grid">
-        {grid.map((day, i) => (
+    <div className="heatmap-container">
+      <div className="heatmap-grid" style={{ flexWrap: 'wrap', maxWidth: '100%' }}>
+        {grid.map((count, i) => (
           <div
             key={i}
-            className={`heatmap-cell level-${day.level}`}
-            title={`${day.date}: ${day.count} commits`}
+            className={`heatmap-day l${Math.min(count > 0 ? Math.ceil(count / 2) : 0, 4)}`}
+            title={`${count} commits`}
           />
         ))}
       </div>
-      <div className="heatmap-legend">
-        <span className="text-tertiary">Less</span>
-        <div className="heatmap-cell level-0" />
-        <div className="heatmap-cell level-1" />
-        <div className="heatmap-cell level-2" />
-        <div className="heatmap-cell level-3" />
-        <div className="heatmap-cell level-4" />
-        <span className="text-tertiary">More</span>
+      <div className="text-xs text-secondary" style={{ marginTop: 8, textAlign: 'right' }}>
+        Last 12 Weeks
       </div>
     </div>
   )
 }
 
-// Repos Tab
 function ReposTab({ userId }: { userId: string }) {
   const { data, loading, refetch } = useApi<{ repos: Repo[] }>('/api/github/repos', userId)
 
@@ -450,74 +446,57 @@ function ReposTab({ userId }: { userId: string }) {
     const url = `${API_URL}/api/user/excluded-repos${currentlyExcluded ? `/${encodeURIComponent(repoFullName)}` : ''}`
     await fetch(url, {
       method: currentlyExcluded ? 'DELETE' : 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId
-      },
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
       body: currentlyExcluded ? undefined : JSON.stringify({ repo_full_name: repoFullName })
     })
     refetch()
   }
 
   return (
-    <div className="repos-tab">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">Repositories</h1>
-          <p className="page-subtitle">Manage which repos appear in suggestions</p>
-        </div>
-      </header>
+    <div style={{ padding: '20px', maxWidth: '900px' }}>
+      <TerminalInput command="cat .gitignore" />
 
-      {loading ? (
-        <div className="loading-state">
-          <div className="spinner" />
-          <p>Loading repositories...</p>
+      <div className="panel">
+        <div className="panel-header">
+          <span>Repository List</span>
+          <span className="text-xs text-secondary">{data?.repos.length} repos found</span>
         </div>
-      ) : (
-        <div className="repos-list">
-          {data?.repos.map(repo => (
-            <div key={repo.id} className={`repo-item ${repo.excluded ? 'excluded' : ''}`}>
-              <div className="repo-info">
-                <a href={repo.html_url} target="_blank" rel="noopener noreferrer" className="repo-name-link">
-                  {repo.name}
-                </a>
-                {repo.description && (
-                  <p className="repo-description-small">{repo.description}</p>
-                )}
-                <div className="repo-meta">
-                  {repo.language && (
-                    <span className="repo-language">
-                      <span className="language-dot" />
-                      {repo.language}
-                    </span>
-                  )}
+        <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+          {loading ? (
+            <div style={{ padding: 20 }}>Loading...</div>
+          ) : (
+            data?.repos.map(repo => (
+              <div key={repo.id} className="repo-row">
+                <div>
+                  <a href={repo.html_url} target="_blank" className="repo-name">{repo.full_name}</a>
+                  <span className="text-secondary text-xs" style={{ marginLeft: 8 }}>{repo.language}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {repo.excluded && <span className="text-warning text-xs">EXCLUDED</span>}
+                  <button
+                    className="btn btn-outline"
+                    style={{ fontSize: 10, padding: '2px 6px' }}
+                    onClick={() => toggleExclude(repo.full_name, repo.excluded)}
+                  >
+                    {repo.excluded ? '+ INCLUDE' : '- EXCLUDE'}
+                  </button>
                 </div>
               </div>
-              <button
-                className={`btn-toggle ${repo.excluded ? 'excluded' : ''}`}
-                onClick={() => toggleExclude(repo.full_name, repo.excluded)}
-              >
-                {repo.excluded ? 'Include' : 'Exclude'}
-              </button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }
 
-// Settings Tab
 function SettingsTab({ userId }: { userId: string }) {
   const { data, refetch } = useApi<{ preferences: any }>('/api/user/preferences', userId)
 
   const updatePreference = async (key: string, value: any) => {
     await fetch(`${API_URL}/api/user/preferences`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId
-      },
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
       body: JSON.stringify({ [key]: value })
     })
     refetch()
@@ -526,123 +505,75 @@ function SettingsTab({ userId }: { userId: string }) {
   const prefs = data?.preferences
 
   return (
-    <div className="settings-tab">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">Settings</h1>
-          <p className="page-subtitle">Configure your notification preferences</p>
+    <div style={{ padding: '20px', maxWidth: '600px' }}>
+      <TerminalInput command="vim settings.json" />
+
+      <div className="panel">
+        <div className="panel-header">User Preferences</div>
+        <div className="panel-content">
+          <div className="form-group">
+            <span className="text-accent font-bold mb-4 display-block">{'{'}</span>
+
+            <div style={{ paddingLeft: 20 }}>
+              <div style={{ marginBottom: 16 }}>
+                <span className="text-secondary">// Notifications</span>
+                <label className="form-checkbox" style={{ marginTop: 8 }}>
+                  <input type="checkbox" hidden checked={prefs?.email_enabled ?? true} onChange={e => updatePreference('email_enabled', e.target.checked ? 1 : 0)} />
+                  <span className="checkbox-visual" />
+                  <span className="text-primary code">"email_enabled": {String(prefs?.email_enabled ?? true)}</span>
+                </label>
+
+                <label className="form-checkbox" style={{ marginTop: 8 }}>
+                  <input type="checkbox" hidden checked={prefs?.weekends_off ?? false} onChange={e => updatePreference('weekends_off', e.target.checked ? 1 : 0)} />
+                  <span className="checkbox-visual" />
+                  <span className="text-primary code">"weekends_off": {String(prefs?.weekends_off ?? false)}</span>
+                </label>
+              </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <span className="text-secondary">// Schedule</span>
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className="text-primary code">"morning_time": "</span>
+                  <input
+                    type="time"
+                    style={{ background: 'var(--bg-input)', border: 'none', color: 'var(--accent-orange)', fontFamily: 'monospace' }}
+                    value={prefs?.morning_time || '09:00'}
+                    onChange={e => updatePreference('morning_time', e.target.value)}
+                  />
+                  <span className="text-primary code">"</span>
+                </div>
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className="text-primary code">"evening_time": "</span>
+                  <input
+                    type="time"
+                    style={{ background: 'var(--bg-input)', border: 'none', color: 'var(--accent-orange)', fontFamily: 'monospace' }}
+                    value={prefs?.evening_time || '20:00'}
+                    onChange={e => updatePreference('evening_time', e.target.value)}
+                  />
+                  <span className="text-primary code">"</span>
+                </div>
+              </div>
+            </div>
+
+            <span className="text-accent font-bold">{'}'}</span>
+          </div>
         </div>
-      </header>
-
-      <div className="settings-sections">
-        <section className="settings-section">
-          <h3 className="section-title">Notifications</h3>
-
-          <div className="setting-item">
-            <div className="setting-info">
-              <h4>Email Reminders</h4>
-              <p>Receive email reminders when you haven't committed</p>
-            </div>
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={prefs?.email_enabled ?? true}
-                onChange={(e) => updatePreference('email_enabled', e.target.checked ? 1 : 0)}
-              />
-              <span className="toggle-slider" />
-            </label>
-          </div>
-
-          <div className="setting-item">
-            <div className="setting-info">
-              <h4>Push Notifications</h4>
-              <p>Get browser push notifications</p>
-            </div>
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={prefs?.push_enabled ?? true}
-                onChange={(e) => updatePreference('push_enabled', e.target.checked ? 1 : 0)}
-              />
-              <span className="toggle-slider" />
-            </label>
-          </div>
-
-          <div className="setting-item">
-            <div className="setting-info">
-              <h4>Skip Weekends</h4>
-              <p>Don't send reminders on Saturday and Sunday</p>
-            </div>
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={prefs?.weekends_off ?? false}
-                onChange={(e) => updatePreference('weekends_off', e.target.checked ? 1 : 0)}
-              />
-              <span className="toggle-slider" />
-            </label>
-          </div>
-        </section>
-
-        <section className="settings-section">
-          <h3 className="section-title">Reminder Times</h3>
-
-          <div className="setting-item">
-            <div className="setting-info">
-              <h4>Morning Reminder</h4>
-              <p>Motivational nudge to start your day</p>
-            </div>
-            <input
-              type="time"
-              className="time-input"
-              value={prefs?.morning_time || '09:00'}
-              onChange={(e) => updatePreference('morning_time', e.target.value)}
-            />
-          </div>
-
-          <div className="setting-item">
-            <div className="setting-info">
-              <h4>Afternoon Reminder</h4>
-              <p>Mid-day check-in</p>
-            </div>
-            <input
-              type="time"
-              className="time-input"
-              value={prefs?.afternoon_time || '15:00'}
-              onChange={(e) => updatePreference('afternoon_time', e.target.value)}
-            />
-          </div>
-
-          <div className="setting-item">
-            <div className="setting-info">
-              <h4>Evening Reminder</h4>
-              <p>Last chance before midnight</p>
-            </div>
-            <input
-              type="time"
-              className="time-input"
-              value={prefs?.evening_time || '20:00'}
-              onChange={(e) => updatePreference('evening_time', e.target.value)}
-            />
-          </div>
-        </section>
       </div>
     </div>
   )
 }
 
-// Main App
-function App() {
-  const { user } = useAuth()
-
-  return user ? <Dashboard /> : <LandingPage />
-}
-
-// Wrap with provider
-export default function AppWithProvider() {
+function AppWithProvider() {
   return (
     <AuthProvider>
       <App />
     </AuthProvider>
   )
 }
+
+function App() {
+  const { user } = useAuth()
+  return user ? <Dashboard /> : <LandingPage />
+}
+
+export default AppWithProvider
