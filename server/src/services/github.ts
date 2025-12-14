@@ -174,8 +174,8 @@ export class GitHubService {
                 }
             }
 
-            // Return last 84 days (12 weeks)
-            return contributions.slice(-84);
+            // Return full contribution history (usually 1 year)
+            return contributions;
         } catch (error) {
             console.error('Error fetching contributions via GraphQL, falling back to events:', error);
 

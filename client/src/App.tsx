@@ -125,12 +125,22 @@ function useApi<T>(endpoint: string, userId?: string) {
       return
     }
 
+    setLoading(true)
     fetch(`${API_URL}${endpoint}`, {
       headers: { 'X-User-Id': userId }
     })
-      .then(res => res.json())
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text()
+          throw new Error(`API Error ${res.status}: ${text}`)
+        }
+        return res.json()
+      })
       .then(setData)
-      .catch(err => setError(err.message))
+      .catch(err => {
+        console.error(`Failed to fetch ${endpoint}:`, err)
+        setError(err.message)
+      })
       .finally(() => setLoading(false))
   }, [endpoint, userId])
 
@@ -140,9 +150,18 @@ function useApi<T>(endpoint: string, userId?: string) {
     fetch(`${API_URL}${endpoint}`, {
       headers: { 'X-User-Id': userId }
     })
-      .then(res => res.json())
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text()
+          throw new Error(`API Error ${res.status}: ${text}`)
+        }
+        return res.json()
+      })
       .then(setData)
-      .catch(err => setError(err.message))
+      .catch(err => {
+        console.error(`Failed to fetch ${endpoint}:`, err)
+        setError(err.message)
+      })
       .finally(() => setLoading(false))
   }
 
@@ -608,43 +627,68 @@ function RepoNoteModal({ repoFullName, userId, currentNote, onClose }: {
 }
 
 function ContributionGraph({ contributions }: { contributions: Contribution[] }) {
-  const weeks = 52  // Full year like GitHub
-  const totalDays = weeks * 7
+  if (!contributions || contributions.length === 0) {
+    return (
+      <div className="card contribution-card">
+        <div className="card-body empty-graph">
+          Please refresh to load contribution data.
+        </div>
+      </div>
+    )
+  }
 
-  // Build grid starting from a Sunday (like GitHub)
-  const today = new Date()
-  const startDate = new Date(today)
-  startDate.setDate(today.getDate() - totalDays + 1)
-  // Adjust to start from Sunday
+  // 1. Determine date range from ACTUAL data
+  // Sort just in case
+  const sorted = [...contributions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  const firstDate = new Date(sorted[0].date)
+  const lastDate = new Date() // End at today
+
+  // 2. Align start date to the previous Sunday
+  const startDate = new Date(firstDate)
   while (startDate.getDay() !== 0) {
     startDate.setDate(startDate.getDate() - 1)
   }
 
+  // 3. Generate the full grid (52/53 weeks)
   const grid: { date: string; count: number; month: number }[][] = []
   const currentDate = new Date(startDate)
   const monthLabels: { month: string; weekIndex: number }[] = []
   let lastMonth = -1
+  let weekIndex = 0
 
-  for (let w = 0; w < weeks; w++) {
+  // Generate until we pass today
+  while (currentDate <= lastDate || currentDate.getDay() !== 0) {
     const week: { date: string; count: number; month: number }[] = []
-    for (let d = 0; d < 7; d++) {
-      const dateStr = currentDate.toISOString().split('T')[0]
-      const count = contributions.find(c => c.date === dateStr)?.count || 0
-      const month = currentDate.getMonth()
 
-      // Track month changes for labels
-      if (month !== lastMonth && d === 0) {
+    // Check for month label at start of week
+    const month = currentDate.getMonth()
+    if (month !== lastMonth) {
+      // Only add label if it's the first week of the month mostly
+      const d = new Date(currentDate);
+      d.setDate(d.getDate() + 7);
+      if (d.getMonth() === month) { // simplistic check
         monthLabels.push({
           month: currentDate.toLocaleDateString('en-US', { month: 'short' }),
-          weekIndex: w
+          weekIndex
         })
         lastMonth = month
       }
+    }
 
-      week.push({ date: dateStr, count, month })
+    for (let d = 0; d < 7; d++) {
+      const dateStr = currentDate.toISOString().split('T')[0]
+      // Use efficient lookup or find
+      // (Since array is size 365, .find is fast enough, but map is better if strict)
+      const count = contributions.find(c => c.date === dateStr)?.count || 0
+
+      week.push({ date: dateStr, count, month: currentDate.getMonth() })
       currentDate.setDate(currentDate.getDate() + 1)
     }
     grid.push(week)
+    weekIndex++
+
+    // Safety break
+    if (weekIndex > 54) break;
   }
 
   const getLevel = (count: number) => {
@@ -657,6 +701,15 @@ function ContributionGraph({ contributions }: { contributions: Contribution[] })
 
   const totalContributions = contributions.reduce((sum, c) => sum + c.count, 0)
   const dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', '']
+
+  // Format date for title: "6 contributions on December 14th."
+  const formatTitle = (count: number, dateStr: string) => {
+    const date = new Date(dateStr + 'T12:00:00') // Avoid timezone shift
+    const options: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' }
+    const dateText = date.toLocaleDateString('en-US', options)
+    // Add ordinal suffix logic if needed, simplifed for now
+    return `${count} contribution${count === 1 ? '' : 's'} on ${dateText}`
+  }
 
   return (
     <div className="card contribution-card">
@@ -694,7 +747,7 @@ function ContributionGraph({ contributions }: { contributions: Contribution[] })
                     <div
                       key={di}
                       className={`contribution-day ${getLevel(day.count)}`}
-                      title={`${day.count} contributions on ${day.date}`}
+                      title={formatTitle(day.count, day.date)}
                     />
                   ))}
                 </div>
@@ -882,7 +935,7 @@ function SettingsTab({ userId }: { userId: string }) {
       const { publicKey, enabled } = await vapidRes.json()
 
       if (!enabled || !publicKey) {
-        console.log('Push notifications not configured on server')
+        alert('Push notifications are not configured on the server. Please contact support.')
         return
       }
 
@@ -908,8 +961,10 @@ function SettingsTab({ userId }: { userId: string }) {
       })
 
       updatePreference('push_enabled', 1)
+      alert('Push notifications enabled successfully!')
     } catch (error) {
       console.error('Failed to enable push notifications:', error)
+      alert('Failed to enable push notifications. Please try again or check your browser settings.')
     }
   }
 
