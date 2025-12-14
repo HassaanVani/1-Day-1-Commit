@@ -937,21 +937,6 @@ function SettingsTab({ userId }: { userId: string }) {
     refetch()
   }
 
-  const sendTestEmail = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/user/test-notification`, {
-        method: 'POST',
-        headers: { 'X-User-Id': userId }
-      });
-      if (res.ok) alert('Test email sent! Check your inbox.');
-      else {
-        const err = await res.json();
-        alert('Failed to send test email: ' + (err.error || 'Unknown error'));
-      }
-    } catch (e: any) {
-      alert('Error sending test email: ' + e.message);
-    }
-  }
 
   const requestPushPermission = async () => {
     if (!pushSupported) return
@@ -1047,21 +1032,6 @@ function SettingsTab({ userId }: { userId: string }) {
             <div className="setting-info">
               <span className="setting-label">Email Reminders</span>
               <span className="setting-desc">Receive email notifications when you haven't committed</span>
-              <button
-                onClick={sendTestEmail}
-                style={{
-                  marginTop: '8px',
-                  background: 'none',
-                  border: '1px solid var(--border-default)',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  color: 'var(--text-secondary)',
-                  fontSize: '11px',
-                  cursor: 'pointer'
-                }}
-              >
-                Send Test Email
-              </button>
             </div>
             <label className="toggle">
               <input
@@ -1119,6 +1089,21 @@ function SettingsTab({ userId }: { userId: string }) {
               <span className="toggle-slider"></span>
             </label>
           </div>
+
+          <div className="setting-row">
+            <div className="setting-info">
+              <span className="setting-label">Daily Digest</span>
+              <span className="setting-desc">Also receive reminders even if you've already committed</span>
+            </div>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={prefs.email_when_committed ?? false}
+                onChange={e => updatePreference('email_when_committed', e.target.checked ? 1 : 0)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -1131,7 +1116,7 @@ function SettingsTab({ userId }: { userId: string }) {
           </h2>
         </div>
         <div className="card-body">
-          <div className="reminder-list">
+          <div className="reminders-list">
             {reminders.map(reminder => (
               <div key={reminder.id} className="reminder-item">
                 <div className="reminder-time-group">

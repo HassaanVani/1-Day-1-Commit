@@ -28,6 +28,7 @@ interface Preferences {
     email_enabled: number;
     push_enabled: number;
     weekends_off: number;
+    email_when_committed: number;
 }
 
 interface Reminder {
@@ -91,7 +92,7 @@ async function checkUserAndNotify(userId: string, timeOfDay: string) {
     `).get(userId) as User | undefined;
 
     const prefs = dbHelpers.prepare(`
-        SELECT email_enabled, push_enabled, weekends_off
+        SELECT email_enabled, push_enabled, weekends_off, email_when_committed
         FROM preferences
         WHERE user_id = ?
     `).get(userId) as Preferences | undefined;
@@ -108,19 +109,22 @@ async function checkUserAndNotify(userId: string, timeOfDay: string) {
         const githubService = new GitHubService(user.github_token);
         const { hasCommitted } = await githubService.hasCommittedToday(user.github_username);
 
-        // Only notify if user hasn't committed
-        if (hasCommitted) return;
+        // Skip notification if user has committed AND doesn't want emails when committed
+        if (hasCommitted && !prefs.email_when_committed) return;
 
         const streak = dbHelpers.prepare('SELECT current_streak FROM streaks WHERE user_id = ?')
             .get(userId) as any;
         const currentStreak = streak?.current_streak || 0;
 
-        // Get suggestion
-        const repos = await githubService.getUserRepos();
-        const excludedRepos = dbHelpers.prepare('SELECT repo_full_name FROM excluded_repos WHERE user_id = ?')
-            .all(userId)
-            .map((r: any) => r.repo_full_name);
-        const suggestion = await githubService.getSuggestion(repos, excludedRepos);
+        // Get suggestion (only if hasn't committed)
+        let suggestion = null;
+        if (!hasCommitted) {
+            const repos = await githubService.getUserRepos();
+            const excludedRepos = dbHelpers.prepare('SELECT repo_full_name FROM excluded_repos WHERE user_id = ?')
+                .all(userId)
+                .map((r: any) => r.repo_full_name);
+            suggestion = await githubService.getSuggestion(repos, excludedRepos);
+        }
 
         // Send email if enabled
         if (prefs.email_enabled && user.email) {

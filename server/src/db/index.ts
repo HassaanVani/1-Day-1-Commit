@@ -44,7 +44,8 @@ export async function initDatabase() {
       email_enabled INTEGER DEFAULT 1,
       push_enabled INTEGER DEFAULT 0,
       calendar_enabled INTEGER DEFAULT 0,
-      weekends_off INTEGER DEFAULT 0
+      weekends_off INTEGER DEFAULT 0,
+      email_when_committed INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS excluded_repos (

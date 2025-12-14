@@ -51,7 +51,7 @@ router.get('/preferences', (req: Request, res: Response) => {
 // Update user preferences
 router.put('/preferences', (req: Request, res: Response) => {
     const userId = req.headers['x-user-id'] as string;
-    const { email_enabled, push_enabled, calendar_enabled, weekends_off } = req.body;
+    const { email_enabled, push_enabled, calendar_enabled, weekends_off, email_when_committed } = req.body;
 
     if (!userId) {
         return res.status(401).json({ error: 'Not authenticated' });
@@ -65,25 +65,28 @@ router.put('/preferences', (req: Request, res: Response) => {
                 email_enabled = ?,
                 push_enabled = ?,
                 calendar_enabled = ?,
-                weekends_off = ?
+                weekends_off = ?,
+                email_when_committed = ?
             WHERE user_id = ?
         `).run(
             email_enabled ?? current.email_enabled ?? 1,
             push_enabled ?? current.push_enabled ?? 0,
             calendar_enabled ?? current.calendar_enabled ?? 0,
             weekends_off ?? current.weekends_off ?? 0,
+            email_when_committed ?? current.email_when_committed ?? 0,
             userId
         );
     } else {
         dbHelpers.prepare(`
-            INSERT INTO preferences (user_id, email_enabled, push_enabled, calendar_enabled, weekends_off)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO preferences (user_id, email_enabled, push_enabled, calendar_enabled, weekends_off, email_when_committed)
+            VALUES (?, ?, ?, ?, ?, ?)
         `).run(
             userId,
             email_enabled ?? 1,
             push_enabled ?? 0,
             calendar_enabled ?? 0,
-            weekends_off ?? 0
+            weekends_off ?? 0,
+            email_when_committed ?? 0
         );
     }
 

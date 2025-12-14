@@ -610,11 +610,9 @@
 
 .custom-tooltip {
   position: absolute;
-  /* Fixed relative to viewport usually better, but absolute works if parent relative */
-  bottom: 100%;
+  bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  margin-bottom: 8px;
   padding: 6px 10px;
   background: #24292f;
   color: #ffffff;
@@ -623,8 +621,8 @@
   border-radius: 6px;
   white-space: nowrap;
   pointer-events: none;
-  z-index: 1000;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .custom-tooltip::after {
@@ -636,6 +634,15 @@
   border-width: 5px;
   border-style: solid;
   border-color: #24292f transparent transparent transparent;
+}
+
+/* Ensure contribution card doesn't clip tooltips */
+.contribution-card {
+  overflow: visible;
+}
+
+.contribution-card .card-body {
+  overflow: visible;
 }
 
 /* Streak Section */
@@ -1079,6 +1086,78 @@
 .add-reminder {
   display: flex;
   gap: var(--space-2);
+}
+
+.reminder-input {
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.reminder-time-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+}
+
+.toggle-small {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+}
+
+.toggle-small input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-small .toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: 18px;
+  transition: 0.2s;
+}
+
+.toggle-small .toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 12px;
+  width: 12px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--text-secondary);
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.toggle-small input:checked+.toggle-slider {
+  background-color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.toggle-small input:checked+.toggle-slider:before {
+  transform: translateX(14px);
+  background-color: white;
+}
+
+.btn-icon.danger {
+  color: var(--color-danger);
+}
+
+.btn-icon.danger:hover {
+  background: rgba(248, 81, 73, 0.1);
 }
 
 /* ----------------------------------------

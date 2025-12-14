@@ -221,52 +221,60 @@ export class GitHubService {
         try {
             const contributions = await this.getContributions(username);
 
-            // Calculate current streak from contributions
-            let currentStreak = 0;
-            let longestStreak = 0;
-            let tempStreak = 0;
-
-            // Sort by date descending to calculate current streak
+            // Sort by date descending (most recent first)
             const sorted = [...contributions].sort((a, b) =>
                 new Date(b.date).getTime() - new Date(a.date).getTime()
             );
 
-            // Check if today or yesterday had a contribution (allow for timezone differences)
-            const today = new Date().toISOString().split('T')[0];
-            const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayStr = today.toISOString().split('T')[0];
+
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
 
             // Find current streak
-            let streakBroken = false;
-            for (let i = 0; i < sorted.length && !streakBroken; i++) {
-                const day = sorted[i];
-                if (day.count > 0) {
-                    // Check if this continues the streak
-                    if (i === 0) {
-                        // First day - must be today or yesterday
-                        if (day.date === today || day.date === yesterday) {
-                            currentStreak = 1;
-                        }
-                    } else {
-                        // Check if consecutive with previous counted day
-                        const prevDate = new Date(sorted[i - 1].date);
-                        const currDate = new Date(day.date);
-                        const diffDays = Math.floor((prevDate.getTime() - currDate.getTime()) / 86400000);
+            let currentStreak = 0;
 
-                        if (diffDays === 1) {
-                            currentStreak++;
-                        } else {
-                            streakBroken = true;
-                        }
+            // Check if we have a contribution today or yesterday to even have an active streak
+            const todayContrib = sorted.find(d => d.date === todayStr);
+            const yesterdayContrib = sorted.find(d => d.date === yesterdayStr);
+
+            const committedToday = todayContrib && todayContrib.count > 0;
+            const committedYesterday = yesterdayContrib && yesterdayContrib.count > 0;
+
+            // If no commit today AND no commit yesterday, streak is 0
+            if (!committedToday && !committedYesterday) {
+                currentStreak = 0;
+            } else {
+                // Start counting from today (or yesterday if today has no commits yet)
+                let checkDate = new Date(today);
+
+                // If today has no commits, we can still have a streak if yesterday had commits
+                // But we start counting from yesterday
+                if (!committedToday && committedYesterday) {
+                    checkDate = new Date(yesterday);
+                }
+
+                // Count consecutive days backwards
+                while (true) {
+                    const dateStr = checkDate.toISOString().split('T')[0];
+                    const dayData = sorted.find(d => d.date === dateStr);
+
+                    if (dayData && dayData.count > 0) {
+                        currentStreak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else {
+                        break;
                     }
-                } else if (i === 0 && day.date === today) {
-                    // Today has no contributions yet, check yesterday
-                    continue;
-                } else if (currentStreak > 0) {
-                    streakBroken = true;
                 }
             }
 
-            // Calculate longest streak by going through all contributions chronologically
+            // Calculate longest streak (chronological order)
+            let longestStreak = 0;
+            let tempStreak = 0;
+
             const chronological = [...contributions].sort((a, b) =>
                 new Date(a.date).getTime() - new Date(b.date).getTime()
             );
@@ -278,7 +286,7 @@ export class GitHubService {
                     } else {
                         const prevDate = new Date(chronological[i - 1].date);
                         const currDate = new Date(chronological[i].date);
-                        const diffDays = Math.floor((currDate.getTime() - prevDate.getTime()) / 86400000);
+                        const diffDays = Math.round((currDate.getTime() - prevDate.getTime()) / 86400000);
 
                         if (diffDays === 1 && chronological[i - 1].count > 0) {
                             tempStreak++;
