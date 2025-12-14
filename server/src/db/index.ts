@@ -100,16 +100,16 @@ export const dbHelpers = {
       const columns = result[0].columns;
       const values = result[0].values[0];
       const row: any = {};
-      columns.forEach((col, i) => row[col] = values[i]);
+      columns.forEach((col: string, i: number) => row[col] = values[i]);
       return row;
     },
     all: (...params: any[]) => {
       const result = db.exec(sql, params);
       if (result.length === 0) return [];
       const columns = result[0].columns;
-      return result[0].values.map(values => {
+      return result[0].values.map((values: any[]) => {
         const row: any = {};
-        columns.forEach((col, i) => row[col] = values[i]);
+        columns.forEach((col: string, i: number) => row[col] = values[i]);
         return row;
       });
     },
