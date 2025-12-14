@@ -137,6 +137,21 @@ VITE_API_URL=http://localhost:3001
 | GET | `/api/github/suggestion` | Get repo suggestion |
 | GET | `/api/github/contributions` | Contribution data |
 
+## Push Notifications Setup
+
+To enable browser push notifications, you need to generate VAPID keys:
+
+1. In the `server` directory, run:
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+2. Add the generated keys to your `server/.env` (or Railway variables):
+   ```env
+   VAPID_PUBLIC_KEY=your_generated_public_key
+   VAPID_PRIVATE_KEY=your_generated_private_key
+   VAPID_SUBJECT=mailto:your-email@example.com
+   ```
+
 ## License
 
 MIT
