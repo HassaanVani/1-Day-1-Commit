@@ -19,8 +19,13 @@ Repo exclusions – Ignore repos you don’t want factored in
 
 Tech stack
 Frontend:	React 18, Vite, TypeScript
+
 Styling:	Plain CSS with a small custom design system
+
 Backend:	Node.js + Express
+
 Database:	SQLite (development), PostgreSQL (production)
+
 Email:	Resend
+
 Hosting:	Netlify (frontend), Railway (backend)
