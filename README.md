@@ -1,3 +1,5 @@
+[https://1day1commit.netlify.app](url)
+
 A small app built around a simple idea: if you want to get better at coding, show up every day.
 Make one commit a day. That’s it.
 
