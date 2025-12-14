@@ -176,10 +176,14 @@ export class GitHubService {
 
             // Return full contribution history (usually 1 year)
             return contributions;
-        } catch (error) {
-            console.error('Error fetching contributions via GraphQL, falling back to events:', error);
+        } catch (error: any) {
+            console.error('Error fetching contributions via GraphQL:', error?.message);
+            if (error?.response) {
+                console.error('GraphQL Response Error:', JSON.stringify(error.response));
+            }
 
             // Fallback: use events API and fill in missing dates
+            console.log('Falling back to Events API (Limited Data)...');
             try {
                 const events = await this.fetch(`/users/${username}/events?per_page=100`);
                 const contributionMap: Record<string, number> = {};
@@ -192,10 +196,10 @@ export class GitHubService {
                     }
                 }
 
-                // Generate last 84 days
+                // Generate last 365 days for fallback so grid looks full (but empty)
                 const contributions: ContributionDay[] = [];
                 const today = new Date();
-                for (let i = 83; i >= 0; i--) {
+                for (let i = 364; i >= 0; i--) {
                     const d = new Date(today);
                     d.setDate(d.getDate() - i);
                     const dateStr = d.toISOString().split('T')[0];
@@ -204,7 +208,6 @@ export class GitHubService {
                         count: contributionMap[dateStr] || 0
                     });
                 }
-
                 return contributions;
             } catch (fallbackError) {
                 console.error('Fallback also failed:', fallbackError);
@@ -212,6 +215,7 @@ export class GitHubService {
             }
         }
     }
+
 
     async getCurrentStreak(username: string): Promise<{ currentStreak: number; longestStreak: number }> {
         try {

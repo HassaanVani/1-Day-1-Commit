@@ -790,30 +790,45 @@
 .contribution-day-labels {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 3px;
+  /* Match week gap */
   padding-top: 20px;
+  /* Align with top of grid (month labels are ~14px + gap) */
   padding-right: 4px;
 }
 
 .day-label {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-tertiary);
-  height: 11px;
-  line-height: 11px;
+  height: 10px;
+  /* Match day height */
+  line-height: 10px;
   text-align: right;
+  display: block;
+}
+
+/* Ensure empty spans in day-labels also take up space */
+.contribution-day-labels span:empty {
+  height: 10px;
+  display: block;
 }
 
 .contribution-main {
   flex: 1;
-  overflow-x: auto;
+  overflow-x: visible;
+  /* Allow tooltips to overflow */
 }
 
 .contribution-month-labels {
   display: grid;
-  grid-template-columns: repeat(52, 11px);
-  gap: 3px;
+  grid-template-columns: repeat(53, 10px);
+  /* Match day width */
+  column-gap: 3px;
+  /* Match flex gap */
   margin-bottom: 4px;
   height: 14px;
+  width: max-content;
+  /* Ensure it doesn't shrink */
 }
 
 .month-label {

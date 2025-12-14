@@ -937,36 +937,68 @@ function SettingsTab({ userId }: { userId: string }) {
     refetch()
   }
 
+  const sendTestEmail = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/test-notification`, {
+        method: 'POST',
+        headers: { 'X-User-Id': userId }
+      });
+      if (res.ok) alert('Test email sent! Check your inbox.');
+      else {
+        const err = await res.json();
+        alert('Failed to send test email: ' + (err.error || 'Unknown error'));
+      }
+    } catch (e: any) {
+      alert('Error sending test email: ' + e.message);
+    }
+  }
+
   const requestPushPermission = async () => {
     if (!pushSupported) return
 
     try {
       // Request permission
       const permission = await Notification.requestPermission()
-      if (permission !== 'granted') return
+      if (permission !== 'granted') {
+        alert('Permission denied (User selected Block). Please reset in browser settings.')
+        return
+      }
 
       // Get VAPID public key from server
       const vapidRes = await fetch(`${API_URL}/api/push/vapid-public-key`)
+      if (!vapidRes.ok) throw new Error('Failed to fetch VAPID key')
+
       const { publicKey, enabled } = await vapidRes.json()
 
       if (!enabled || !publicKey) {
-        alert('Push notifications are not configured on the server. Please contact support.')
+        alert('Push notifications are not configured on the server. Please check env variables.')
         return
       }
 
       // Register service worker
-      const registration = await navigator.serviceWorker.register('/sw.js')
-      await navigator.serviceWorker.ready
+      // Add error handling for registration
+      let registration;
+      try {
+        registration = await navigator.serviceWorker.register('/sw.js')
+        await navigator.serviceWorker.ready
+      } catch (swError: any) {
+        throw new Error('Service Worker Registration Failed: ' + swError.message);
+      }
 
       // Subscribe to push
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey)
-      })
+      let subscription;
+      try {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        })
+      } catch (subError: any) {
+        throw new Error('Push Subscription Failed: ' + subError.message);
+      }
 
       // Send subscription to server
       const subJson = subscription.toJSON()
-      await fetch(`${API_URL}/api/user/push-subscription`, {
+      const saveRes = await fetch(`${API_URL}/api/user/push-subscription`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
         body: JSON.stringify({
@@ -975,11 +1007,13 @@ function SettingsTab({ userId }: { userId: string }) {
         })
       })
 
+      if (!saveRes.ok) throw new Error('Failed to save subscription to server');
+
       updatePreference('push_enabled', 1)
       alert('Push notifications enabled successfully!')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to enable push notifications:', error)
-      alert('Failed to enable push notifications. Please try again or check your browser settings.')
+      alert(`Failed to enable push notifications: ${error.message || String(error)}`)
     }
   }
 
@@ -1013,6 +1047,21 @@ function SettingsTab({ userId }: { userId: string }) {
             <div className="setting-info">
               <span className="setting-label">Email Reminders</span>
               <span className="setting-desc">Receive email notifications when you haven't committed</span>
+              <button
+                onClick={sendTestEmail}
+                style={{
+                  marginTop: '8px',
+                  background: 'none',
+                  border: '1px solid var(--border-default)',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  color: 'var(--text-secondary)',
+                  fontSize: '11px',
+                  cursor: 'pointer'
+                }}
+              >
+                Send Test Email
+              </button>
             </div>
             <label className="toggle">
               <input
@@ -1030,33 +1079,36 @@ function SettingsTab({ userId }: { userId: string }) {
               <span className="setting-desc">
                 {pushSupported
                   ? 'Receive browser push notifications'
-                  : 'Not supported in this browser'}
+                  : 'Push notifications not supported on this browser'}
               </span>
-            </div>
-            {pushSupported ? (
-              prefs.push_enabled ? (
-                <label className="toggle">
-                  <input
-                    type="checkbox"
-                    checked={true}
-                    onChange={() => updatePreference('push_enabled', 0)}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-              ) : (
-                <button className="btn-secondary btn-sm" onClick={requestPushPermission}>
-                  Enable
+              {pushSupported && !prefs.push_enabled && (
+                <button
+                  className="btn-text"
+                  onClick={requestPushPermission}
+                  style={{ marginTop: '8px', fontSize: '12px' }}
+                >
+                  Enable Push Notifications
                 </button>
-              )
-            ) : (
-              <span className="badge badge-muted">Unavailable</span>
-            )}
+              )}
+            </div>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={prefs.push_enabled ?? false}
+                disabled={!pushSupported}
+                onChange={e => {
+                  if (e.target.checked) requestPushPermission()
+                  else updatePreference('push_enabled', 0)
+                }}
+              />
+              <span className="toggle-slider"></span>
+            </label>
           </div>
 
           <div className="setting-row">
             <div className="setting-info">
-              <span className="setting-label">Skip Weekends</span>
-              <span className="setting-desc">Don't send reminders on Saturday and Sunday</span>
+              <span className="setting-label">Weekends Off</span>
+              <span className="setting-desc">Don't notify me on Saturday/Sunday</span>
             </div>
             <label className="toggle">
               <input
@@ -1079,33 +1131,29 @@ function SettingsTab({ userId }: { userId: string }) {
           </h2>
         </div>
         <div className="card-body">
-          <p className="card-desc">Set when you want to receive your daily reminders. Add as many as you need.</p>
-
-          <div className="reminders-list">
-            {reminders.length === 0 ? (
-              <p className="empty-state">No reminders configured</p>
-            ) : (
-              reminders.map(reminder => (
-                <div key={reminder.id} className="reminder-item">
-                  <label className="toggle">
+          <div className="reminder-list">
+            {reminders.map(reminder => (
+              <div key={reminder.id} className="reminder-item">
+                <div className="reminder-time-group">
+                  <span className="reminder-time">{reminder.time}</span>
+                  <label className="toggle-small">
                     <input
                       type="checkbox"
                       checked={!!reminder.enabled}
-                      onChange={e => toggleReminder(reminder.id, e.target.checked)}
+                      onChange={(e) => toggleReminder(reminder.id, e.target.checked)}
                     />
                     <span className="toggle-slider"></span>
                   </label>
-                  <span className="reminder-time">{reminder.time}</span>
-                  <button
-                    className="btn-icon btn-danger"
-                    onClick={() => deleteReminder(reminder.id)}
-                    title="Delete reminder"
-                  >
-                    {Icons.trash}
-                  </button>
                 </div>
-              ))
-            )}
+                <button
+                  className="btn-icon danger"
+                  onClick={() => deleteReminder(reminder.id)}
+                  title="Remove"
+                >
+                  {Icons.trash}
+                </button>
+              </div>
+            ))}
           </div>
 
           <div className="add-reminder">
@@ -1113,11 +1161,14 @@ function SettingsTab({ userId }: { userId: string }) {
               type="time"
               value={newReminderTime}
               onChange={e => setNewReminderTime(e.target.value)}
-              className="time-input"
+              className="reminder-input"
             />
-            <button className="btn-primary btn-sm" onClick={addReminder} disabled={!newReminderTime}>
-              {Icons.plus}
-              Add Reminder
+            <button
+              className="btn-secondary btn-sm"
+              onClick={addReminder}
+              disabled={!newReminderTime}
+            >
+              Add Time
             </button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import { dbHelpers, saveDatabase } from '../db/index.js';
+import { notificationService } from '../services/notifications.js';
 
 const router = Router();
 
@@ -358,6 +359,30 @@ router.delete('/push-subscription', (req: Request, res: Response) => {
     dbHelpers.prepare('DELETE FROM push_subscriptions WHERE user_id = ?').run(userId);
     saveDatabase();
     res.json({ success: true });
+});
+
+// Test notification
+router.post('/test-notification', async (req: Request, res: Response) => {
+    const userId = req.headers['x-user-id'] as string;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+    const user = dbHelpers.prepare('SELECT email, github_username FROM users WHERE id = ?').get(userId) as any;
+    if (!user || !user.email) return res.status(400).json({ error: 'No email found' });
+
+    try {
+        await notificationService.sendEmail({
+            to: user.email,
+            username: user.github_username,
+            currentStreak: 0,
+            type: 'morning',
+            suggestedRepo: 'Test Repo'
+        });
+        console.log(`[TEST] Sent test email to ${user.email}`);
+        res.json({ success: true });
+    } catch (error: any) {
+        console.error('[TEST] Failed:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 export default router;
