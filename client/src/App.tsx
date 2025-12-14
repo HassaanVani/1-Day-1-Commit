@@ -404,22 +404,17 @@ function HomeTab({ today, suggestion, contributions, onRefresh, userId }: {
                 {hasCommitted ? Icons.check : Icons.clock}
               </div>
               <div className="status-text">
-                <h3>{hasCommitted ? 'Great work!' : 'No commits yet'}</h3>
-                <p>
-                  {hasCommitted
-                    ? `You've made ${today?.commitCount || 1} commit${(today?.commitCount || 1) > 1 ? 's' : ''} today. Keep it up!`
-                    : 'Make your daily commitment to keep your streak alive.'
-                  }
-                </p>
+                <h3>{hasCommitted ? `${today?.commitCount || 0} commits` : 'Awaiting commit'}</h3>
+                <p>{hasCommitted ? 'Streak secured for today' : 'Commit to maintain streak'}</p>
               </div>
             </div>
 
             <div className="streak-section">
               <div className="streak-main">
                 <span className="streak-number">{streak}</span>
-                <span className="streak-unit">day streak</span>
+                <span className="streak-unit">days</span>
               </div>
-              <p className="streak-record">Personal best: {longestStreak} days</p>
+              <p className="streak-record">Best: {longestStreak}</p>
             </div>
           </div>
         </div>
@@ -612,65 +607,115 @@ function RepoNoteModal({ repoFullName, userId, currentNote, onClose }: {
   )
 }
 
-// ============================================
-// Contribution Graph
-// ============================================
 function ContributionGraph({ contributions }: { contributions: Contribution[] }) {
-  const weeks = 12
-  const days = weeks * 7
+  const weeks = 52  // Full year like GitHub
+  const totalDays = weeks * 7
 
-  const grid = Array.from({ length: days }, (_, i) => {
-    const d = new Date()
-    d.setDate(d.getDate() - (days - 1 - i))
-    const dateStr = d.toISOString().split('T')[0]
-    const count = contributions.find(c => c.date === dateStr)?.count || 0
-    return { date: dateStr, count }
-  })
+  // Build grid starting from a Sunday (like GitHub)
+  const today = new Date()
+  const startDate = new Date(today)
+  startDate.setDate(today.getDate() - totalDays + 1)
+  // Adjust to start from Sunday
+  while (startDate.getDay() !== 0) {
+    startDate.setDate(startDate.getDate() - 1)
+  }
 
-  const weekGroups = []
-  for (let i = 0; i < grid.length; i += 7) {
-    weekGroups.push(grid.slice(i, i + 7))
+  const grid: { date: string; count: number; month: number }[][] = []
+  const currentDate = new Date(startDate)
+  const monthLabels: { month: string; weekIndex: number }[] = []
+  let lastMonth = -1
+
+  for (let w = 0; w < weeks; w++) {
+    const week: { date: string; count: number; month: number }[] = []
+    for (let d = 0; d < 7; d++) {
+      const dateStr = currentDate.toISOString().split('T')[0]
+      const count = contributions.find(c => c.date === dateStr)?.count || 0
+      const month = currentDate.getMonth()
+
+      // Track month changes for labels
+      if (month !== lastMonth && d === 0) {
+        monthLabels.push({
+          month: currentDate.toLocaleDateString('en-US', { month: 'short' }),
+          weekIndex: w
+        })
+        lastMonth = month
+      }
+
+      week.push({ date: dateStr, count, month })
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+    grid.push(week)
   }
 
   const getLevel = (count: number) => {
-    if (count === 0) return ''
-    if (count <= 2) return 'l1'
-    if (count <= 4) return 'l2'
-    if (count <= 6) return 'l3'
+    if (count === 0) return 'l0'
+    if (count <= 3) return 'l1'
+    if (count <= 6) return 'l2'
+    if (count <= 9) return 'l3'
     return 'l4'
   }
 
+  const totalContributions = contributions.reduce((sum, c) => sum + c.count, 0)
+  const dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', '']
+
   return (
-    <div className="card">
+    <div className="card contribution-card">
       <div className="card-header">
-        <h2 className="card-title">Contribution Activity</h2>
-        <span className="card-subtitle">Last {weeks} weeks</span>
+        <h2 className="card-title">{totalContributions} contributions in the last year</h2>
       </div>
       <div className="card-body">
-        <div className="contribution-grid">
-          {weekGroups.map((week, wi) => (
-            <div key={wi} className="contribution-week">
-              {week.map((day, di) => (
-                <div
-                  key={di}
-                  className={`contribution-day ${getLevel(day.count)}`}
-                  title={`${day.date}: ${day.count} contributions`}
-                />
+        <div className="contribution-wrapper">
+          {/* Day labels on left */}
+          <div className="contribution-day-labels">
+            {dayLabels.map((label, i) => (
+              <span key={i} className="day-label">{label}</span>
+            ))}
+          </div>
+
+          <div className="contribution-main">
+            {/* Month labels on top */}
+            <div className="contribution-month-labels">
+              {monthLabels.map((m, i) => (
+                <span
+                  key={i}
+                  className="month-label"
+                  style={{ gridColumnStart: m.weekIndex + 1 }}
+                >
+                  {m.month}
+                </span>
               ))}
             </div>
-          ))}
+
+            {/* Contribution grid */}
+            <div className="contribution-grid">
+              {grid.map((week, wi) => (
+                <div key={wi} className="contribution-week">
+                  {week.map((day, di) => (
+                    <div
+                      key={di}
+                      className={`contribution-day ${getLevel(day.count)}`}
+                      title={`${day.count} contributions on ${day.date}`}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="contribution-legend">
-          <span>Less</span>
-          <div className="legend-colors">
-            <span style={{ background: 'var(--contrib-l0)' }}></span>
-            <span style={{ background: 'var(--contrib-l1)' }}></span>
-            <span style={{ background: 'var(--contrib-l2)' }}></span>
-            <span style={{ background: 'var(--contrib-l3)' }}></span>
-            <span style={{ background: 'var(--contrib-l4)' }}></span>
+        <div className="contribution-footer">
+          <a href="#" className="contribution-link">Learn how we count contributions</a>
+          <div className="contribution-legend">
+            <span>Less</span>
+            <div className="legend-colors">
+              <span className="l0"></span>
+              <span className="l1"></span>
+              <span className="l2"></span>
+              <span className="l3"></span>
+              <span className="l4"></span>
+            </div>
+            <span>More</span>
           </div>
-          <span>More</span>
         </div>
       </div>
     </div>
@@ -826,10 +871,58 @@ function SettingsTab({ userId }: { userId: string }) {
 
   const requestPushPermission = async () => {
     if (!pushSupported) return
-    const permission = await Notification.requestPermission()
-    if (permission === 'granted') {
+
+    try {
+      // Request permission
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') return
+
+      // Get VAPID public key from server
+      const vapidRes = await fetch(`${API_URL}/api/push/vapid-public-key`)
+      const { publicKey, enabled } = await vapidRes.json()
+
+      if (!enabled || !publicKey) {
+        console.log('Push notifications not configured on server')
+        return
+      }
+
+      // Register service worker
+      const registration = await navigator.serviceWorker.register('/sw.js')
+      await navigator.serviceWorker.ready
+
+      // Subscribe to push
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey)
+      })
+
+      // Send subscription to server
+      const subJson = subscription.toJSON()
+      await fetch(`${API_URL}/api/user/push-subscription`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
+        body: JSON.stringify({
+          endpoint: subJson.endpoint,
+          keys: subJson.keys
+        })
+      })
+
       updatePreference('push_enabled', 1)
+    } catch (error) {
+      console.error('Failed to enable push notifications:', error)
     }
+  }
+
+  // Helper to convert base64 to Uint8Array for VAPID key
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4)
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+    const rawData = window.atob(base64)
+    const outputArray = new Uint8Array(rawData.length)
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i)
+    }
+    return outputArray
   }
 
   const prefs = data?.preferences || {}

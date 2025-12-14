@@ -27,6 +27,14 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// VAPID public key for push notifications
+app.get('/api/push/vapid-public-key', (req, res) => {
+    res.json({
+        publicKey: process.env.VAPID_PUBLIC_KEY || null,
+        enabled: !!process.env.VAPID_PUBLIC_KEY
+    });
+});
+
 // Start server
 async function start() {
     try {

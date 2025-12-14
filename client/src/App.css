@@ -725,12 +725,61 @@
   font-style: italic;
 }
 
-/* Contribution Graph */
+/* Contribution Graph - GitHub Style */
+.contribution-card .card-header {
+  background: transparent;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.contribution-card .card-title {
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.contribution-wrapper {
+  display: flex;
+  gap: 4px;
+}
+
+.contribution-day-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-top: 20px;
+  padding-right: 4px;
+}
+
+.day-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  height: 11px;
+  line-height: 11px;
+  text-align: right;
+}
+
+.contribution-main {
+  flex: 1;
+  overflow-x: auto;
+}
+
+.contribution-month-labels {
+  display: grid;
+  grid-template-columns: repeat(52, 11px);
+  gap: 3px;
+  margin-bottom: 4px;
+  height: 14px;
+}
+
+.month-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
 .contribution-grid {
   display: flex;
   gap: 3px;
-  overflow-x: auto;
-  padding-bottom: var(--space-2);
 }
 
 .contribution-week {
@@ -740,39 +789,59 @@
 }
 
 .contribution-day {
-  width: 12px;
-  height: 12px;
-  background: var(--contrib-l0);
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
-  transition: transform 0.1s;
+  outline: 1px solid rgba(27, 31, 35, 0.06);
+  outline-offset: -1px;
 }
 
 .contribution-day:hover {
-  transform: scale(1.3);
+  outline: 1px solid var(--text-tertiary);
+}
+
+.contribution-day.l0 {
+  background: #161b22;
 }
 
 .contribution-day.l1 {
-  background: var(--contrib-l1);
+  background: #0e4429;
 }
 
 .contribution-day.l2 {
-  background: var(--contrib-l2);
+  background: #006d32;
 }
 
 .contribution-day.l3 {
-  background: var(--contrib-l3);
+  background: #26a641;
 }
 
 .contribution-day.l4 {
-  background: var(--contrib-l4);
+  background: #39d353;
+}
+
+.contribution-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-muted);
+}
+
+.contribution-link {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.contribution-link:hover {
+  color: var(--text-link);
 }
 
 .contribution-legend {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-  justify-content: flex-end;
+  gap: 4px;
   font-size: 11px;
   color: var(--text-tertiary);
 }
@@ -783,9 +852,29 @@
 }
 
 .legend-colors span {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
+}
+
+.legend-colors .l0 {
+  background: #161b22;
+}
+
+.legend-colors .l1 {
+  background: #0e4429;
+}
+
+.legend-colors .l2 {
+  background: #006d32;
+}
+
+.legend-colors .l3 {
+  background: #26a641;
+}
+
+.legend-colors .l4 {
+  background: #39d353;
 }
 
 /* ----------------------------------------
